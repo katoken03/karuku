@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .icon-preview { margin: 10px; display: inline-block; }
+        canvas { border: 1px solid #ccc; margin: 5px; }
+        .download-links { margin-top: 20px; }
+        .download-links a { display: block; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Karuku Icon Generator</h1>
+    <p>Generate PNG icons from SVG for the Karuku app</p>
+    
+    <div id="previews"></div>
+    <div class="download-links" id="downloads"></div>
+    
+    <script>
+        const sizes = [
+            { size: 16, name: 'icon-16.png' },
+            { size: 18, name: 'tray-icon.png' },
+            { size: 32, name: 'icon-32.png' },
+            { size: 512, name: 'app-icon.png' }
+        ];
+        
+        function createKIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 背景を透明に
+            ctx.clearRect(0, 0, size, size);
+            
+            // 「K」の描画設定
+            ctx.fillStyle = '#000000';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = Math.max(1, size / 10);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // 「K」の座標計算
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const leftX = size * 0.2;
+            const rightX = size * 0.8;
+            const topY = size * 0.2;
+            const bottomY = size * 0.8;
+            
+            // 左の縦線
+            ctx.beginPath();
+            ctx.moveTo(leftX, topY);
+            ctx.lineTo(leftX, bottomY);
+            ctx.stroke();
+            
+            // 上の斜め線
+            ctx.beginPath();
+            ctx.moveTo(leftX, centerY);
+            ctx.lineTo(rightX, topY);
+            ctx.stroke();
+            
+            // 下の斜め線
+            ctx.beginPath();
+            ctx.moveTo(leftX, centerY);
+            ctx.lineTo(rightX, bottomY);
+            ctx.stroke();
+            
+            return canvas;
+        }
+        
+        function generateIcons() {
+            const previewsDiv = document.getElementById('previews');
+            const downloadsDiv = document.getElementById('downloads');
+            
+            sizes.forEach(iconConfig => {
+                const canvas = createKIcon(iconConfig.size);
+                
+                // プレビュー表示
+                const preview = document.createElement('div');
+                preview.className = 'icon-preview';
+                preview.appendChild(canvas);
+                
+                const label = document.createElement('div');
+                label.textContent = `${iconConfig.name} (${iconConfig.size}x${iconConfig.size})`;
+                preview.appendChild(label);
+                
+                previewsDiv.appendChild(preview);
+                
+                // ダウンロードリンク作成
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = iconConfig.name;
+                    link.textContent = `Download ${iconConfig.name}`;
+                    downloadsDiv.appendChild(link);
+                });
+            });
+        }
+        
+        // ページ読み込み時に実行
+        window.addEventListener('load', generateIcons);
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import { ProcessedFile } from '../types/index';
+import { useTranslation, i18n } from '../i18n';
+
+const LogsApp: React.FC = () => {
+  const [logs, setLogs] = useState<ProcessedFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    // i18nの初期化（静的インポートで既に読み込み済み）
+    await i18n.loadTranslations();
+    
+    // システム言語の検出と設定
+    const systemLanguage = i18n.detectSystemLanguage();
+    i18n.setLanguage(systemLanguage);
+    
+    // ログの読み込み
+    await loadLogs();
+  };
+
+  const loadLogs = async () => {
+    try {
+      const loadedLogs = await window.electronAPI.getLogs(200);
+      setLogs(loadedLogs);
+    } catch (error) {
+      console.error('Failed to load logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openLogFile = async () => {
+    try {
+      await window.electronAPI.openLogFile();
+    } catch (error) {
+      console.error('Failed to open log file:', error);
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(date);
+  };
+
+  const calculateSavings = (original: number, optimized: number): string => {
+    if (original === 0) return '0%';
+    const savings = ((original - optimized) / original) * 100;
+    return savings.toFixed(1) + '%';
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.loading}>{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <h1 style={styles.title}>{t('logs.title')}</h1>
+        <div style={styles.headerActions}>
+          <button onClick={loadLogs} style={styles.refreshButton}>
+            {t('logs.refresh')}
+          </button>
+          <button onClick={openLogFile} style={styles.openFileButton}>
+            {t('logs.openLogFile')}
+          </button>
+        </div>
+      </header>
+
+      {logs.length === 0 ? (
+        <div style={styles.emptyState}>
+          <p>No files have been processed yet.</p>
+          <p>Add some directories to watch and drop PNG files to see them here.</p>
+        </div>
+      ) : (
+        <div style={styles.logList}>
+          <div style={styles.stats}>
+            <div style={styles.stat}>
+              <span style={styles.statValue}>{logs.length}</span>
+              <span style={styles.statLabel}>{t('logs.totalFiles')}</span>
+            </div>
+            <div style={styles.stat}>
+              <span style={styles.statValue}>
+                {logs.filter(log => log.success).length}
+              </span>
+              <span style={styles.statLabel}>{t('logs.successCount')}</span>
+            </div>
+            <div style={styles.stat}>
+              <span style={styles.statValue}>
+                {logs.filter(log => !log.success).length}
+              </span>
+              <span style={styles.statLabel}>{t('logs.errorCount')}</span>
+            </div>
+          </div>
+
+          <div style={styles.tableContainer}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.tableHeader}>
+                  <th style={styles.th}>{t('logs.processingTime')}</th>
+                  <th style={styles.th}>{t('logs.fileName')}</th>
+                  <th style={styles.th}>{t('logs.originalSize')}</th>
+                  <th style={styles.th}>{t('logs.optimizedSize')}</th>
+                  <th style={styles.th}>{t('logs.compressionRatio')}</th>
+                  <th style={styles.th}>{t('logs.status')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log, index) => (
+                  <tr key={index} style={styles.tableRow}>
+                    <td style={styles.td}>
+                      {formatDate(log.timestamp)}
+                    </td>
+                    <td style={styles.tdFile}>
+                      <span title={log.filePath}>
+                        {log.filePath.split('/').pop() || log.filePath}
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                      {formatFileSize(log.originalSize)}
+                    </td>
+                    <td style={styles.td}>
+                      {log.success ? formatFileSize(log.optimizedSize) : '-'}
+                    </td>
+                    <td style={styles.td}>
+                      {log.success ? calculateSavings(log.originalSize, log.optimizedSize) : '-'}
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{
+                        ...styles.status,
+                        ...(log.success ? styles.statusSuccess : styles.statusError)
+                      }}>
+                        {log.success ? t('logs.success') : t('logs.failed')}
+                      </span>
+                      {log.error && (
+                        <div style={styles.error} title={log.error}>
+                          {log.error.length > 50 ? log.error.substring(0, 50) + '...' : log.error}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    padding: '20px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '30px',
+    backgroundColor: 'white',
+    padding: '20px',
+    borderRadius: '8px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#333',
+    margin: 0,
+  },
+  headerActions: {
+    display: 'flex',
+    gap: '12px',
+  },
+  refreshButton: {
+    backgroundColor: '#007AFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '8px 16px',
+    fontSize: '14px',
+    cursor: 'pointer',
+  },
+  openFileButton: {
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '8px 16px',
+    fontSize: '14px',
+    cursor: 'pointer',
+  },
+  loading: {
+    textAlign: 'center' as const,
+    padding: '40px',
+    fontSize: '16px',
+    color: '#666',
+  },
+  emptyState: {
+    textAlign: 'center' as const,
+    backgroundColor: 'white',
+    padding: '60px 20px',
+    borderRadius: '8px',
+    color: '#666',
+  },
+  logList: {
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  stats: {
+    display: 'flex',
+    padding: '20px',
+    borderBottom: '1px solid #e1e5e9',
+    gap: '40px',
+  },
+  stat: {
+    textAlign: 'center' as const,
+  },
+  statValue: {
+    display: 'block',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  statLabel: {
+    display: 'block',
+    fontSize: '12px',
+    color: '#666',
+    marginTop: '4px',
+  },
+  tableContainer: {
+    overflowX: 'auto' as const,
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+  },
+  tableHeader: {
+    backgroundColor: '#f8f9fa',
+  },
+  th: {
+    padding: '12px',
+    textAlign: 'left' as const,
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#666',
+    borderBottom: '1px solid #e1e5e9',
+  },
+  tableRow: {
+    borderBottom: '1px solid #e1e5e9',
+  },
+  td: {
+    padding: '12px',
+    fontSize: '14px',
+    color: '#333',
+    whiteSpace: 'nowrap' as const,
+  },
+  tdFile: {
+    padding: '12px',
+    fontSize: '14px',
+    color: '#333',
+    maxWidth: '200px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    webkitTextOverflow: 'ellipsis' as any,
+    whiteSpace: 'nowrap' as const,
+  },
+  status: {
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    fontWeight: '500',
+  },
+  statusSuccess: {
+    backgroundColor: '#d4edda',
+    color: '#155724',
+  },
+  statusError: {
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
+  },
+  error: {
+    fontSize: '11px',
+    color: '#dc3545',
+    marginTop: '4px',
+    fontStyle: 'italic',
+  },
+};
+
+// ログアプリの初期化
+const container = document.getElementById('logs-root');
+if (container) {
+  const root = createRoot(container);
+  root.render(<LogsApp />);
+}

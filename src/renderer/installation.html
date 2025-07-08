@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Installing Dependencies</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      text-align: center;
+      color: #333;
+    }
+    .progress-container {
+      margin: 20px 0;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background-color: #007AFF;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .progress-text {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+    .stage-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .stage {
+      flex: 1;
+      text-align: center;
+      padding: 5px;
+      border-radius: 15px;
+      font-size: 12px;
+      background-color: #e0e0e0;
+      color: #666;
+      margin: 0 2px;
+    }
+    .stage.active {
+      background-color: #007AFF;
+      color: white;
+    }
+    .stage.completed {
+      background-color: #34C759;
+      color: white;
+    }
+    .error-message {
+      color: #FF3B30;
+      font-size: 14px;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #FFE5E5;
+      border-radius: 5px;
+    }
+    .success-message {
+      color: #34C759;
+      font-size: 14px;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #E5F7E5;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007AFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056CC;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Installing pngquant</h1>
+    
+    <div class="stage-indicator">
+      <div class="stage" id="stage-checking">Check</div>
+      <div class="stage" id="stage-updating">Update</div>
+      <div class="stage" id="stage-installing">Install</div>
+      <div class="stage" id="stage-verifying">Verify</div>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">Preparing...</div>
+    </div>
+    
+    <div id="message-container"></div>
+    
+    <button id="close-button" onclick="closeWindow()" style="display: none;">Close</button>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    const stageMap = {
+      'checking': 'stage-checking',
+      'updating': 'stage-updating', 
+      'installing': 'stage-installing',
+      'verifying': 'stage-verifying',
+      'completed': 'stage-verifying',
+      'error': null
+    };
+
+    const stageProgress = {
+      'checking': 20,
+      'updating': 40,
+      'installing': 70,
+      'verifying': 90,
+      'completed': 100,
+      'error': 0
+    };
+
+    ipcRenderer.on('installation-progress', (event, progress) => {
+      updateProgress(progress);
+    });
+
+    ipcRenderer.on('installation-complete', (event, result) => {
+      handleCompletion(result);
+    });
+
+    function updateProgress(progress) {
+      const { stage, message } = progress;
+      
+      // ステージインジケーターの更新
+      document.querySelectorAll('.stage').forEach(el => {
+        el.classList.remove('active', 'completed');
+      });
+      
+      if (stage !== 'error') {
+        // 現在のステージをアクティブに
+        const currentStageEl = document.getElementById(stageMap[stage]);
+        if (currentStageEl) {
+          currentStageEl.classList.add('active');
+        }
+        
+        // 完了したステージをマーク
+        Object.keys(stageMap).forEach(key => {
+          if (stageProgress[key] < stageProgress[stage]) {
+            const el = document.getElementById(stageMap[key]);
+            if (el) {
+              el.classList.add('completed');
+            }
+          }
+        });
+      }
+      
+      // プログレスバーの更新
+      const progressFill = document.getElementById('progress-fill');
+      const progressPercent = stageProgress[stage] || 0;
+      progressFill.style.width = `${progressPercent}%`;
+      
+      // メッセージの更新
+      document.getElementById('progress-text').textContent = message;
+    }
+
+    function handleCompletion(result) {
+      const messageContainer = document.getElementById('message-container');
+      const closeButton = document.getElementById('close-button');
+      
+      if (result.success) {
+        messageContainer.innerHTML = `
+          <div class="success-message">
+            <strong>Success!</strong><br>
+            ${result.message}
+          </div>
+        `;
+        
+        // すべてのステージを完了に
+        document.querySelectorAll('.stage').forEach(el => {
+          el.classList.remove('active');
+          el.classList.add('completed');
+        });
+        
+        document.getElementById('progress-fill').style.width = '100%';
+        document.getElementById('progress-text').textContent = 'Installation completed!';
+      } else {
+        messageContainer.innerHTML = `
+          <div class="error-message">
+            <strong>Installation Failed</strong><br>
+            ${result.message}
+            ${result.details ? `<br><br><small>${result.details}</small>` : ''}
+          </div>
+        `;
+        
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('progress-text').textContent = 'Installation failed';
+      }
+      
+      closeButton.style.display = 'block';
+    }
+
+    function closeWindow() {
+      ipcRenderer.send('close-installation-dialog');
+    }
+  </script>
+</body>
+</html>
