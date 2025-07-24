@@ -8,7 +8,7 @@ import './styles/button.css';
 const LogsApp: React.FC = () => {
   const [logs, setLogs] = useState<ProcessedFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
 
   useEffect(() => {
     initializeApp();
@@ -54,7 +54,35 @@ const LogsApp: React.FC = () => {
   };
 
   const formatDate = (date: Date): string => {
-    return new Intl.DateTimeFormat('en-US', {
+    // 言語に応じたロケールマッピング
+    const localeMap: Record<string, string> = {
+      'en': 'en-US',
+      'ja': 'ja-JP',
+      'zh-CN': 'zh-CN',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'ko': 'ko-KR',
+      'pt': 'pt-BR'
+    };
+    
+    const locale = localeMap[currentLanguage] || 'en-US';
+    
+    // 日本語の場合は特別なフォーマットを使用
+    if (currentLanguage === 'ja') {
+      return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false // 24時間表記
+      }).format(date);
+    }
+    
+    // その他の言語は各言語のネイティブ表示
+    return new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
