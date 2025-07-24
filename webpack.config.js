@@ -15,17 +15,33 @@ module.exports = [
           use: 'ts-loader',
           exclude: /node_modules/,
         },
+
       ],
     },
-    resolve: {
-      extensions: ['.ts', '.js'],
-    },
+
     output: {
       filename: 'main.js',
       path: path.resolve(__dirname, 'dist/main'),
     },
     node: {
       __dirname: false,
+    },
+    externals: {
+      'fsevents': 'require("fsevents")',
+      'chokidar': 'require("chokidar")',
+      'electron': 'require("electron")'
+    },
+    resolve: {
+      extensions: ['.ts', '.js'],
+      fallback: {
+        'fsevents': false
+      }
+    },
+    resolve: {
+      extensions: ['.ts', '.js'],
+      fallback: {
+        'fsevents': false
+      }
     },
     plugins: [
       new CopyWebpackPlugin({
@@ -48,17 +64,21 @@ module.exports = [
           use: 'ts-loader',
           exclude: /node_modules/,
         },
+
       ],
     },
-    resolve: {
-      extensions: ['.ts', '.js'],
-    },
+
     output: {
       filename: 'preload.js',
       path: path.resolve(__dirname, 'dist/main'),
     },
     node: {
       __dirname: false,
+    },
+    externals: {
+      'fsevents': 'require("fsevents")',
+      'chokidar': 'require("chokidar")',
+      'electron': 'require("electron")'
     },
   },
   // Renderer process (settings)

@@ -11,6 +11,7 @@ const pt = {
   'settings.generalSettings': 'Configurações gerais',
   'settings.watchDirectories': 'Diretórios monitorados',
   'settings.notifications': 'Notificações',
+  'settings.testNotification': 'Testar notificação',
   'settings.autoStart': 'Inicialização automática',
   'settings.addDirectory': 'Adicionar diretório',
   'settings.removeDirectory': 'Remover diretório',

@@ -11,6 +11,7 @@ const de = {
   'settings.generalSettings': 'Allgemeine Einstellungen',
   'settings.watchDirectories': 'Überwachte Verzeichnisse',
   'settings.notifications': 'Benachrichtigungen',
+  'settings.testNotification': 'Benachrichtigung testen',
   'settings.autoStart': 'Automatischer Start',
   'settings.addDirectory': 'Verzeichnis hinzufügen',
   'settings.removeDirectory': 'Verzeichnis entfernen',

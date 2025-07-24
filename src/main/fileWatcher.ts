@@ -1,6 +1,6 @@
 import chokidar from 'chokidar';
 import path from 'path';
-import { WatchConfig } from '../types/index';
+import { WatchConfig, ProcessedFile } from '../types/index';
 import { ImageOptimizer } from './optimizer';
 
 export class FileWatcher {
@@ -11,7 +11,7 @@ export class FileWatcher {
     this.optimizer = optimizer;
   }
 
-  startWatching(config: WatchConfig, onFileProcessed?: (filePath: string, success: boolean) => void): void {
+  startWatching(config: WatchConfig, onFileProcessed?: (filePath: string, result: ProcessedFile) => void): void {
     if (this.watchers.has(config.id)) {
       this.stopWatching(config.id);
     }
@@ -32,10 +32,18 @@ export class FileWatcher {
         setTimeout(async () => {
           try {
             const result = await this.optimizer.optimizeImage(filePath);
-            onFileProcessed?.(filePath, result.success);
+            onFileProcessed?.(filePath, result);
           } catch (error) {
             console.error(`Error processing file ${filePath}:`, error);
-            onFileProcessed?.(filePath, false);
+            const errorResult: ProcessedFile = {
+              filePath,
+              originalSize: 0,
+              optimizedSize: 0,
+              timestamp: new Date(),
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            };
+            onFileProcessed?.(filePath, errorResult);
           }
         }, 1000); // 1秒待機
       }

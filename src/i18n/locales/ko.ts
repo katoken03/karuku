@@ -11,6 +11,7 @@ const ko = {
   'settings.generalSettings': '일반 설정',
   'settings.watchDirectories': '모니터링 디렉토리',
   'settings.notifications': '알림',
+  'settings.testNotification': '알림 테스트',
   'settings.autoStart': '자동 시작',
   'settings.addDirectory': '디렉토리 추가',
   'settings.removeDirectory': '디렉토리 제거',
