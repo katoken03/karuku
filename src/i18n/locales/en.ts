@@ -55,6 +55,10 @@ const en = {
   'notification.directoryAdded': 'Directory added to watch list: {{path}}',
   'notification.directoryRemoved': 'Directory removed from watch list: {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': 'No directories are being watched.',
+  'emptyState.clickToAdd': 'Click "{{addButton}}" to start monitoring a folder for PNG images.',
+  
   // Common
   'common.browse': 'Browse',
   'common.cancel': 'Cancel',

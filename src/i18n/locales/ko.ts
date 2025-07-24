@@ -55,6 +55,10 @@ const ko = {
   'notification.directoryAdded': '모니터링 목록에 디렉토리가 추가되었습니다: {{path}}',
   'notification.directoryRemoved': '모니터링 목록에서 디렉토리가 제거되었습니다: {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': '모니터링 중인 디렉토리가 없습니다.',
+  'emptyState.clickToAdd': 'PNG 이미지 폴더 모니터링을 시작하려면 "{{addButton}}"를 클릭하세요.',
+  
   // Common
   'common.browse': '찾아보기',
   'common.cancel': '취소',

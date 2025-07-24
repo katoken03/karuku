@@ -55,6 +55,10 @@ const es = {
   'notification.directoryAdded': 'Directorio agregado a la lista de monitoreo: {{path}}',
   'notification.directoryRemoved': 'Directorio eliminado de la lista de monitoreo: {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': 'No se están monitoreando directorios.',
+  'emptyState.clickToAdd': 'Haz clic en "{{addButton}}" para comenzar a monitorear una carpeta de imágenes PNG.',
+  
   // Common
   'common.browse': 'Examinar',
   'common.cancel': 'Cancelar',

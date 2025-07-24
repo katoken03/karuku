@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ProcessedFile } from '../types/index';
 import { useTranslation, i18n } from '../i18n';
+import './styles/global.css';
+import './styles/button.css';
 
 const LogsApp: React.FC = () => {
   const [logs, setLogs] = useState<ProcessedFile[]>([]);
@@ -70,21 +72,21 @@ const LogsApp: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loading}>{t('common.loading')}</div>
+      <div className="container">
+        <div className="loading">{t('common.loading')}</div>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>{t('logs.title')}</h1>
+    <div className="container">
+      <header className="header">
+        <h1 className="title">{t('logs.title')}</h1>
         <div style={styles.headerActions}>
-          <button onClick={loadLogs} style={styles.refreshButton}>
+          <button onClick={loadLogs} className="btn-primary">
             {t('logs.refresh')}
           </button>
-          <button onClick={openLogFile} style={styles.openFileButton}>
+          <button onClick={openLogFile} className="btn-primary">
             {t('logs.openLogFile')}
           </button>
         </div>
@@ -173,54 +175,9 @@ const LogsApp: React.FC = () => {
 };
 
 const styles = {
-  container: {
-    padding: '20px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '30px',
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#333',
-    margin: 0,
-  },
   headerActions: {
     display: 'flex',
     gap: '12px',
-  },
-  refreshButton: {
-    backgroundColor: '#007AFF',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    padding: '8px 16px',
-    fontSize: '14px',
-    cursor: 'pointer',
-  },
-  openFileButton: {
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    padding: '8px 16px',
-    fontSize: '14px',
-    cursor: 'pointer',
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '40px',
-    fontSize: '16px',
-    color: '#666',
   },
   emptyState: {
     textAlign: 'center' as const,

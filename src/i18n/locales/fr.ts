@@ -55,6 +55,10 @@ const fr = {
   'notification.directoryAdded': 'Répertoire ajouté à la liste de surveillance : {{path}}',
   'notification.directoryRemoved': 'Répertoire supprimé de la liste de surveillance : {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': 'Aucun répertoire n\'est surveillé.',
+  'emptyState.clickToAdd': 'Cliquez sur "{{addButton}}" pour commencer à surveiller un dossier d\'images PNG.',
+  
   // Common
   'common.browse': 'Parcourir',
   'common.cancel': 'Annuler',

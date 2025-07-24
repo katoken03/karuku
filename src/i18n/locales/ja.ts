@@ -55,6 +55,10 @@ const ja = {
   'notification.directoryAdded': '監視リストにディレクトリを追加しました: {{path}}',
   'notification.directoryRemoved': '監視リストからディレクトリを削除しました: {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': '監視中のディレクトリがありません。',
+  'emptyState.clickToAdd': 'PNGファイルの監視を開始するには「{{addButton}}」をクリックしてください。',
+  
   // Common
   'common.browse': '参照',
   'common.cancel': 'キャンセル',

@@ -55,6 +55,10 @@ const zhCN = {
   'notification.directoryAdded': '目录已添加到监视列表：{{path}}',
   'notification.directoryRemoved': '目录已从监视列表中移除：{{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': '没有正在监视的目录。',
+  'emptyState.clickToAdd': '点击"{{addButton}}"开始监视PNG图像文件夹。',
+  
   // Common
   'common.browse': '浏览',
   'common.cancel': '取消',

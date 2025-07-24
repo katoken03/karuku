@@ -55,6 +55,10 @@ const de = {
   'notification.directoryAdded': 'Verzeichnis zur Überwachungsliste hinzugefügt: {{path}}',
   'notification.directoryRemoved': 'Verzeichnis aus Überwachungsliste entfernt: {{path}}',
   
+  // Empty state messages
+  'emptyState.noDirectories': 'Keine Verzeichnisse werden überwacht.',
+  'emptyState.clickToAdd': 'Klicken Sie auf "{{addButton}}", um mit der Überwachung eines PNG-Bildordners zu beginnen.',
+  
   // Common
   'common.browse': 'Durchsuchen',
   'common.cancel': 'Abbrechen',

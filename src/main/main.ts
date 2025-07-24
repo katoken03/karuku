@@ -65,8 +65,42 @@ class KarukuApp {
   }
 
   private getDefaultConfig(): AppConfig {
+    // デフォルトの監視ディレクトリを設定
+    const desktopPath = path.join(os.homedir(), 'Desktop');
+    
+    // デスクトップディレクトリが存在するかチェック
+    const watchConfigs: WatchConfig[] = [];
+    
+    try {
+      // 同期的にチェックすることで初期化でのパフォーマンスを維持
+      const fs = require('fs');
+      if (fs.existsSync(desktopPath)) {
+        watchConfigs.push({
+          id: 'default-desktop-watcher',
+          path: desktopPath,
+          pattern: '*.png',
+          enabled: true,
+        });
+        console.log(`✅ Desktop directory found: ${desktopPath}`);
+      } else {
+        console.log(`⚠️ Desktop directory not found: ${desktopPath}`);
+        // フォールバックとしてホームディレクトリを使用
+        const homePath = os.homedir();
+        watchConfigs.push({
+          id: 'default-home-watcher',
+          path: homePath,
+          pattern: '*.png',
+          enabled: true,
+        });
+        console.log(`✅ Using home directory as fallback: ${homePath}`);
+      }
+    } catch (error) {
+      console.error('❌ Error checking desktop directory:', error);
+      // エラーが発生した場合は空の設定を返す
+    }
+    
     return {
-      watchConfigs: [],
+      watchConfigs,
       notifications: true,
       autoStart: true,
     };
@@ -83,10 +117,25 @@ class KarukuApp {
   private async loadConfig(): Promise<void> {
     try {
       const configData = await fs.readFile(this.configPath, 'utf8');
-      this.config = { ...this.getDefaultConfig(), ...JSON.parse(configData) };
+      const loadedConfig = JSON.parse(configData);
+      
+      // デフォルト設定とマージ
+      this.config = { ...this.getDefaultConfig(), ...loadedConfig };
+      
+      // 監視ディレクトリが空の場合はデフォルトを追加
+      if (!this.config.watchConfigs || this.config.watchConfigs.length === 0) {
+        console.log('ℹ️ No watch directories configured, adding default desktop watcher');
+        const defaultConfig = this.getDefaultConfig();
+        this.config.watchConfigs = defaultConfig.watchConfigs;
+        await this.saveConfig(); // デフォルト設定を保存
+        console.log(`✅ Default desktop watcher added: ${defaultConfig.watchConfigs[0].path}`);
+      }
     } catch (error) {
       // ファイルが存在しない場合はデフォルト設定を使用
+      console.log('ℹ️ Config file not found, creating default configuration');
+      this.config = this.getDefaultConfig();
       await this.saveConfig();
+      console.log(`✅ Default configuration created with desktop watcher: ${this.config.watchConfigs[0].path}`);
     }
   }
 
@@ -390,6 +439,10 @@ class KarukuApp {
 
     this.settingsWindow.once('ready-to-show', () => {
       this.settingsWindow?.show();
+      // 開発環境では開発者ツールを自動で開く
+      if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+        this.settingsWindow?.webContents.openDevTools();
+      }
       console.log('Settings window after show:');
       console.log('- Resizable:', this.settingsWindow?.isResizable());
       console.log('- Movable:', this.settingsWindow?.isMovable());
@@ -437,6 +490,10 @@ class KarukuApp {
 
     this.logWindow.once('ready-to-show', () => {
       this.logWindow?.show();
+      // 開発環境では開発者ツールを自動で開く
+      if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+        this.logWindow?.webContents.openDevTools();
+      }
       console.log('Log window after show:');
       console.log('- Resizable:', this.logWindow?.isResizable());
       console.log('- Movable:', this.logWindow?.isMovable());

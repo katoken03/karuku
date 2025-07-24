@@ -67,6 +67,10 @@ type TranslationKey =
   | 'notification.directoryAdded'
   | 'notification.directoryRemoved'
   
+  // Empty state messages
+  | 'emptyState.noDirectories'
+  | 'emptyState.clickToAdd'
+  
   // Common
   | 'common.browse'
   | 'common.cancel'
