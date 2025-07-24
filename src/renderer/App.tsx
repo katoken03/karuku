@@ -126,10 +126,23 @@ const App: React.FC = () => {
   const handleTestNotification = async () => {
     try {
       console.log('Testing notification...');
-      await window.electronAPI.testNotification();
-      console.log('Test notification sent');
+      const result = await window.electronAPI.testNotification();
+      
+      if (result.success) {
+        console.log('✅ Test notification sent successfully:', result.message);
+        // 成功時の視覚的フィードバック（オプション）
+        // 必要に応じてUIに成功メッセージを表示
+      } else {
+        console.log('⚠️ Test notification failed:', result.message);
+        
+        if (result.reason === 'permission_denied') {
+          console.log('📱 Notification permission not granted. System settings opened.');
+          // メインプロセス側で適切なダイアログが表示されるため、ここではアラートを表示しない
+        }
+      }
     } catch (error) {
-      console.error('Failed to send test notification:', error);
+      console.error('❌ Failed to test notification:', error);
+      alert(t('notification.testFailed') || 'Failed to test notification. Please try again.');
     }
   };
 

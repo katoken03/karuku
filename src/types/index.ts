@@ -38,3 +38,14 @@ export interface InstallationProgress {
   message: string;
   progress?: number;
 }
+
+export interface NotificationTestResult {
+  success: boolean;
+  reason?: 'permission_denied' | 'system_error';
+  message: string;
+}
+
+export interface NotificationPermissionStatus {
+  hasPermission: boolean;
+  canShow: boolean;
+}

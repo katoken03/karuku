@@ -54,6 +54,8 @@ const ja = {
   'notification.optimizationFailed': '最適化に失敗しました: {{fileName}}',
   'notification.directoryAdded': '監視リストにディレクトリを追加しました: {{path}}',
   'notification.directoryRemoved': '監視リストからディレクトリを削除しました: {{path}}',
+  'notification.permissionRequired': '通知許可が必要です。システム環境設定で通知を許可してから再度お試しください。',
+  'notification.testFailed': '通知テストに失敗しました。再度お試しください。',
   
   // Empty state messages
   'emptyState.noDirectories': '監視中のディレクトリがありません。',

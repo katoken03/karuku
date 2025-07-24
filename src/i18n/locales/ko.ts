@@ -54,6 +54,8 @@ const ko = {
   'notification.optimizationFailed': '최적화에 실패했습니다: {{fileName}}',
   'notification.directoryAdded': '모니터링 목록에 디렉토리가 추가되었습니다: {{path}}',
   'notification.directoryRemoved': '모니터링 목록에서 디렉토리가 제거되었습니다: {{path}}',
+  'notification.permissionRequired': '알림 권한이 필요합니다. 시스템 설정에서 알림을 허용하고 다시 시도해주세요.',
+  'notification.testFailed': '알림 테스트에 실패했습니다. 다시 시도해주세요.',
   
   // Empty state messages
   'emptyState.noDirectories': '모니터링 중인 디렉토리가 없습니다.',

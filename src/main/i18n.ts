@@ -38,7 +38,13 @@ type MainTranslationKey =
   | 'dialog.notificationPermission.message'
   | 'dialog.notificationPermission.detail'
   | 'dialog.notificationPermission.openSettings'
-  | 'dialog.notificationPermission.cancel';
+  | 'dialog.notificationPermission.cancel'
+  
+  // Notification instruction dialog
+  | 'dialog.notificationInstruction.title'
+  | 'dialog.notificationInstruction.message'
+  | 'dialog.notificationInstruction.detail'
+  | 'dialog.notificationInstruction.understood';
 
 type MainTranslationMap = Record<MainTranslationKey, string>;
 
@@ -79,7 +85,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku would like to send you notifications when images are optimized.',
     'dialog.notificationPermission.detail': 'Please enable notifications for Karuku in System Preferences > Notifications.',
     'dialog.notificationPermission.openSettings': 'Open System Preferences',
-    'dialog.notificationPermission.cancel': 'Cancel'
+    'dialog.notificationPermission.cancel': 'Cancel',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Karuku Notification Settings',
+    'dialog.notificationInstruction.message': 'Please enable Karuku notifications',
+    'dialog.notificationInstruction.detail': 'In the notification settings that opened, find "Karuku" in the app list and set notifications to "Allow".\n\nAfter setting up, click the "Test Notification" button again to verify it works.',
+    'dialog.notificationInstruction.understood': 'Understood'
   },
   
   'ja': {
@@ -118,7 +130,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karukuが画像の最適化完了時に通知を送信するには許可が必要です。',
     'dialog.notificationPermission.detail': 'システム環境設定 > 通知でKarukuの通知を有効にしてください。',
     'dialog.notificationPermission.openSettings': 'システム環境設定を開く',
-    'dialog.notificationPermission.cancel': 'キャンセル'
+    'dialog.notificationPermission.cancel': 'キャンセル',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Karuku 通知設定',
+    'dialog.notificationInstruction.message': 'Karukuの通知設定を有効にしてください',
+    'dialog.notificationInstruction.detail': '開いた通知設定のアプリリストから「Karuku」を探して、通知を「許可」に設定してください。\n\n設定後、再度「通知をテスト」ボタンをクリックして動作を確認してください。',
+    'dialog.notificationInstruction.understood': '理解しました'
   },
   
   'zh-CN': {
@@ -157,7 +175,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku 希望在优化图像时向您发送通知。',
     'dialog.notificationPermission.detail': '请在系统偏好设置 > 通知中启用 Karuku 的通知。',
     'dialog.notificationPermission.openSettings': '打开系统偏好设置',
-    'dialog.notificationPermission.cancel': '取消'
+    'dialog.notificationPermission.cancel': '取消',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Karuku 通知设置',
+    'dialog.notificationInstruction.message': '请启用 Karuku 通知',
+    'dialog.notificationInstruction.detail': '在打开的通知设置中，从应用列表中找到“Karuku”并将通知设置为“允许”。\n\n设置完成后，再次点击“测试通知”按钮验证是否正常工作。',
+    'dialog.notificationInstruction.understood': '我知道了'
   },
   
   'es': {
@@ -196,7 +220,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku quiere enviarte notificaciones cuando las imágenes sean optimizadas.',
     'dialog.notificationPermission.detail': 'Por favor, habilita las notificaciones para Karuku en Configuración del Sistema > Notificaciones.',
     'dialog.notificationPermission.openSettings': 'Abrir Configuración del Sistema',
-    'dialog.notificationPermission.cancel': 'Cancelar'
+    'dialog.notificationPermission.cancel': 'Cancelar',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Configuración de notificaciones de Karuku',
+    'dialog.notificationInstruction.message': 'Por favor, habilita las notificaciones de Karuku',
+    'dialog.notificationInstruction.detail': 'En la configuración de notificaciones que se abrió, busca "Karuku" en la lista de aplicaciones y establece las notificaciones en "Permitir".\n\nDespués de configurar, haz clic en el botón "Probar notificación" nuevamente para verificar que funciona.',
+    'dialog.notificationInstruction.understood': 'Entendido'
   },
   
   'fr': {
@@ -235,7 +265,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku souhaite vous envoyer des notifications lors de l\'optimisation d\'images.',
     'dialog.notificationPermission.detail': 'Veuillez activer les notifications pour Karuku dans Préférences Système > Notifications.',
     'dialog.notificationPermission.openSettings': 'Ouvrir les Préférences Système',
-    'dialog.notificationPermission.cancel': 'Annuler'
+    'dialog.notificationPermission.cancel': 'Annuler',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Paramètres de notification Karuku',
+    'dialog.notificationInstruction.message': 'Veuillez activer les notifications Karuku',
+    'dialog.notificationInstruction.detail': 'Dans les paramètres de notification qui se sont ouverts, trouvez "Karuku" dans la liste des applications et définissez les notifications sur "Autoriser".\n\nAprès la configuration, cliquez à nouveau sur le bouton "Tester les notifications" pour vérifier que cela fonctionne.',
+    'dialog.notificationInstruction.understood': 'Compris'
   },
   
   'de': {
@@ -274,7 +310,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku möchte Ihnen Benachrichtigungen senden, wenn Bilder optimiert werden.',
     'dialog.notificationPermission.detail': 'Bitte aktivieren Sie Benachrichtigungen für Karuku in Systemeinstellungen > Benachrichtigungen.',
     'dialog.notificationPermission.openSettings': 'Systemeinstellungen öffnen',
-    'dialog.notificationPermission.cancel': 'Abbrechen'
+    'dialog.notificationPermission.cancel': 'Abbrechen',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Karuku Benachrichtigungseinstellungen',
+    'dialog.notificationInstruction.message': 'Bitte aktivieren Sie Karuku-Benachrichtigungen',
+    'dialog.notificationInstruction.detail': 'In den geöffneten Benachrichtigungseinstellungen finden Sie "Karuku" in der App-Liste und setzen die Benachrichtigungen auf "Erlauben".\n\nNach der Einrichtung klicken Sie erneut auf die Schaltfläche "Benachrichtigung testen", um zu überprüfen, ob es funktioniert.',
+    'dialog.notificationInstruction.understood': 'Verstanden'
   },
   
   'ko': {
@@ -313,7 +355,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku가 이미지 최적화 시 알림을 보내려고 합니다.',
     'dialog.notificationPermission.detail': '시스템 환경설정 > 알림에서 Karuku의 알림을 활성화해 주세요.',
     'dialog.notificationPermission.openSettings': '시스템 환경설정 열기',
-    'dialog.notificationPermission.cancel': '취소'
+    'dialog.notificationPermission.cancel': '취소',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Karuku 알림 설정',
+    'dialog.notificationInstruction.message': 'Karuku 알림을 활성화해 주세요',
+    'dialog.notificationInstruction.detail': '열린 알림 설정에서 앱 목록에서 "Karuku"를 찾아 알림을 "허용"으로 설정해 주세요.\n\n설정 후 "알림 테스트" 버튼을 다시 클릭하여 작동을 확인해 주세요.',
+    'dialog.notificationInstruction.understood': '이해했습니다'
   },
   
   'pt': {
@@ -352,7 +400,13 @@ const translations: Record<LanguageCode, MainTranslationMap> = {
     'dialog.notificationPermission.message': 'Karuku gostaria de enviar notificações quando as imagens forem otimizadas.',
     'dialog.notificationPermission.detail': 'Por favor, habilite as notificações para o Karuku em Preferências do Sistema > Notificações.',
     'dialog.notificationPermission.openSettings': 'Abrir Preferências do Sistema',
-    'dialog.notificationPermission.cancel': 'Cancelar'
+    'dialog.notificationPermission.cancel': 'Cancelar',
+    
+    // Notification instruction dialog
+    'dialog.notificationInstruction.title': 'Configurações de notificação do Karuku',
+    'dialog.notificationInstruction.message': 'Por favor, ative as notificações do Karuku',
+    'dialog.notificationInstruction.detail': 'Nas configurações de notificação que abriram, encontre "Karuku" na lista de aplicativos e defina as notificações como "Permitir".\n\nApós a configuração, clique no botão "Testar notificação" novamente para verificar se funciona.',
+    'dialog.notificationInstruction.understood': 'Entendido'
   }
 };
 

@@ -14,7 +14,13 @@ import path from 'path';
 import os from 'os';
 import { exec } from 'child_process';
 import { v4 as uuidv4 } from 'uuid';
-import { AppConfig, WatchConfig, ProcessedFile } from '../types/index';
+import {
+  AppConfig,
+  WatchConfig,
+  ProcessedFile,
+  NotificationTestResult,
+  NotificationPermissionStatus,
+} from '../types/index';
 import { FileWatcher } from './fileWatcher';
 import { ImageOptimizer } from './optimizer';
 import { DependencyInstaller } from './dependencyInstaller';
@@ -67,10 +73,10 @@ class KarukuApp {
   private getDefaultConfig(): AppConfig {
     // デフォルトの監視ディレクトリを設定
     const desktopPath = path.join(os.homedir(), 'Desktop');
-    
+
     // デスクトップディレクトリが存在するかチェック
     const watchConfigs: WatchConfig[] = [];
-    
+
     try {
       // 同期的にチェックすることで初期化でのパフォーマンスを維持
       const fs = require('fs');
@@ -98,7 +104,7 @@ class KarukuApp {
       console.error('❌ Error checking desktop directory:', error);
       // エラーが発生した場合は空の設定を返す
     }
-    
+
     return {
       watchConfigs,
       notifications: true,
@@ -118,24 +124,30 @@ class KarukuApp {
     try {
       const configData = await fs.readFile(this.configPath, 'utf8');
       const loadedConfig = JSON.parse(configData);
-      
+
       // デフォルト設定とマージ
       this.config = { ...this.getDefaultConfig(), ...loadedConfig };
-      
+
       // 監視ディレクトリが空の場合はデフォルトを追加
       if (!this.config.watchConfigs || this.config.watchConfigs.length === 0) {
-        console.log('ℹ️ No watch directories configured, adding default desktop watcher');
+        console.log(
+          'ℹ️ No watch directories configured, adding default desktop watcher'
+        );
         const defaultConfig = this.getDefaultConfig();
         this.config.watchConfigs = defaultConfig.watchConfigs;
         await this.saveConfig(); // デフォルト設定を保存
-        console.log(`✅ Default desktop watcher added: ${defaultConfig.watchConfigs[0].path}`);
+        console.log(
+          `✅ Default desktop watcher added: ${defaultConfig.watchConfigs[0].path}`
+        );
       }
     } catch (error) {
       // ファイルが存在しない場合はデフォルト設定を使用
       console.log('ℹ️ Config file not found, creating default configuration');
       this.config = this.getDefaultConfig();
       await this.saveConfig();
-      console.log(`✅ Default configuration created with desktop watcher: ${this.config.watchConfigs[0].path}`);
+      console.log(
+        `✅ Default configuration created with desktop watcher: ${this.config.watchConfigs[0].path}`
+      );
     }
   }
 
@@ -175,7 +187,7 @@ class KarukuApp {
       buttons: [
         mainI18n.t('dialog.pngquantSetupRequired.installAutomatically'),
         mainI18n.t('dialog.pngquantSetupRequired.showManualSteps'),
-        mainI18n.t('dialog.pngquantSetupRequired.skipForNow')
+        mainI18n.t('dialog.pngquantSetupRequired.skipForNow'),
       ],
       defaultId: 0,
       cancelId: 2,
@@ -272,7 +284,7 @@ class KarukuApp {
         detail: message,
         buttons: [
           mainI18n.t('dialog.manualInstallation.copyToClipboard'),
-          mainI18n.t('dialog.manualInstallation.close')
+          mainI18n.t('dialog.manualInstallation.close'),
         ],
         defaultId: 0,
       })
@@ -361,8 +373,10 @@ class KarukuApp {
   private updateTrayMenu(): void {
     if (!this.tray) return;
 
-    const activeWatchersCount = this.config.watchConfigs.filter(c => c.enabled).length;
-    
+    const activeWatchersCount = this.config.watchConfigs.filter(
+      (c) => c.enabled
+    ).length;
+
     const contextMenu = Menu.buildFromTemplate([
       {
         label: mainI18n.t('menu.title'),
@@ -380,8 +394,8 @@ class KarukuApp {
       },
       { type: 'separator' },
       {
-        label: mainI18n.t('menu.watchingDirectories', { 
-          count: activeWatchersCount
+        label: mainI18n.t('menu.watchingDirectories', {
+          count: activeWatchersCount,
         }),
         type: 'normal',
         enabled: false,
@@ -394,10 +408,10 @@ class KarukuApp {
     ]);
 
     this.tray.setContextMenu(contextMenu);
-    console.log(`Tray menu updated: watching ${activeWatchersCount} directories`);
+    console.log(
+      `Tray menu updated: watching ${activeWatchersCount} directories`
+    );
   }
-
-
 
   private openSettings(): void {
     if (this.settingsWindow) {
@@ -408,7 +422,7 @@ class KarukuApp {
     // ログウィンドウと全く同じ設定にする
     this.settingsWindow = new BrowserWindow({
       width: 600,
-      height: 600,
+      height: 650,
       minWidth: 500,
       minHeight: 400,
       resizable: true,
@@ -602,12 +616,27 @@ class KarukuApp {
         this.installationWindow.close();
       }
     });
-    
+
     // 通知テスト用IPC
     ipcMain.handle('test-notification', async () => {
       console.log('Testing notification...');
-      await this.showNotification('Test Notification', 'This is a test notification from Karuku');
-      return true;
+
+      // 起動時通知と同じ方式で、許可チェックをスキップして直接通知を送信
+      console.log('✅ Sending test notification (permission check skipped)');
+      await this.showNotification(
+        'Test Notification',
+        'This is a test notification from Karuku'
+      );
+
+      return {
+        success: true,
+        message: 'Test notification sent successfully',
+      } as NotificationTestResult;
+    });
+
+    // 通知許可状態をチェック
+    ipcMain.handle('check-notification-permission', async () => {
+      return await this.checkNotificationPermission();
     });
   }
 
@@ -622,14 +651,22 @@ class KarukuApp {
   private startWatchingConfig(config: WatchConfig): void {
     this.fileWatcher.startWatching(config, (filePath, result) => {
       if (this.config.notifications) {
-        const title = result.success 
-          ? mainI18n.t('notification.imageOptimized') 
+        const title = result.success
+          ? mainI18n.t('notification.imageOptimized')
           : mainI18n.t('notification.optimizationFailed');
-        
+
         let body: string;
-        if (result.success && result.originalSize > 0 && result.optimizedSize > 0) {
+        if (
+          result.success &&
+          result.originalSize > 0 &&
+          result.optimizedSize > 0
+        ) {
           // 圧縮率を計算
-          const compressionRatio = Math.round(((result.originalSize - result.optimizedSize) / result.originalSize) * 100);
+          const compressionRatio = Math.round(
+            ((result.originalSize - result.optimizedSize) /
+              result.originalSize) *
+              100
+          );
           body = `圧縮率 ( ${compressionRatio}% ) : ${path.basename(filePath)}`;
         } else if (result.success) {
           body = `Successfully optimized: ${path.basename(filePath)}`;
@@ -647,9 +684,137 @@ class KarukuApp {
     this.startWatching();
   }
 
+  private async checkNotificationPermission(): Promise<NotificationPermissionStatus> {
+    console.log('🔍 Checking notification permission...');
+
+    if (!Notification.isSupported()) {
+      console.log('❌ Notifications are not supported on this system');
+      return { hasPermission: false, canShow: false };
+    }
+
+    // macOS専用の詳細チェック
+    if (process.platform === 'darwin') {
+      try {
+        // osascriptを使ってシステムの通知設定を確認
+        const hasSystemPermission = await this.checkMacOSNotificationSettings();
+        console.log(`🍎 macOS notification permission: ${hasSystemPermission}`);
+
+        return {
+          hasPermission: hasSystemPermission,
+          canShow: hasSystemPermission,
+        };
+      } catch (error) {
+        console.error('❌ Failed to check macOS notification settings:', error);
+        // フォールバックとしてElectronの標準チェックを使用
+      }
+    }
+
+    // 標準的なチェック（フォールバック）
+    try {
+      // テスト通知を作成して実際に許可されているかチェック
+      const testNotification = new Notification({
+        title: 'Permission Test',
+        body: 'Testing notification permission',
+        silent: true, // 音を出さない
+      });
+
+      return new Promise((resolve) => {
+        testNotification.on('show', () => {
+          console.log('✅ Test notification shown - permission granted');
+          testNotification.close(); // すぐに閉じる
+          resolve({ hasPermission: true, canShow: true });
+        });
+
+        testNotification.on('failed', () => {
+          console.log('❌ Test notification failed - permission denied');
+          resolve({ hasPermission: false, canShow: false });
+        });
+
+        testNotification.show();
+
+        // タイムアウト処理
+        setTimeout(() => {
+          resolve({ hasPermission: false, canShow: false });
+        }, 1000);
+      });
+    } catch (error) {
+      console.error('❌ Failed to test notification permission:', error);
+      return { hasPermission: false, canShow: false };
+    }
+  }
+
+  private async checkMacOSNotificationSettings(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const bundleId = app.getName() || 'Karuku';
+
+      // AppleScriptを使ってシステム環境設定の通知設定を確認
+      const script = `
+        tell application "System Events"
+          try
+            set notificationSettings to (do shell script "defaults read com.apple.ncprefs.plist | grep -A 10 '${bundleId}' | grep 'flags = ' | head -1 | cut -d '=' -f 2 | tr -d ' ;'")
+            if notificationSettings is not equal to "" then
+              set flagsValue to notificationSettings as integer
+              -- フラグが0でない場合は通知が有効
+              return (flagsValue is not equal to 0)
+            else
+              return false
+            end if
+          on error
+            return false
+          end try
+        end tell
+      `;
+
+      exec(`osascript -e '${script}'`, (error, stdout, stderr) => {
+        if (error) {
+          console.log('📝 AppleScript check failed, using alternative method');
+          // 代替方法：sqlite3でNotificationCenterのデータベースを確認
+          this.checkNotificationCenterDB()
+            .then(resolve)
+            .catch(() => resolve(false));
+          return;
+        }
+
+        const result = stdout.trim() === 'true';
+        console.log(`🔍 macOS notification check result: ${result}`);
+        resolve(result);
+      });
+    });
+  }
+
+  private async checkNotificationCenterDB(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const bundleId = app.getName() || 'Karuku';
+
+      // Notification Centerのデータベースから設定を確認
+      const dbPath = path.join(
+        os.homedir(),
+        'Library/Application Support/com.apple.notificationcenterui/data.db'
+      );
+
+      const query = `SELECT flags FROM app WHERE bundleid LIKE '%${bundleId}%' LIMIT 1;`;
+
+      exec(`sqlite3 "${dbPath}" "${query}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.log('📝 SQLite check failed, assuming permission required');
+          resolve(false);
+          return;
+        }
+
+        const flags = parseInt(stdout.trim());
+        const hasPermission = !isNaN(flags) && flags !== 0;
+
+        console.log(
+          `💾 Notification Center DB check: flags=${flags}, hasPermission=${hasPermission}`
+        );
+        resolve(hasPermission);
+      });
+    });
+  }
+
   private async showNotification(title: string, body: string): Promise<void> {
     console.log(`📢 Attempting to show notification: "${title}" - "${body}"`);
-    
+
     if (!Notification.isSupported()) {
       console.log('❌ Notifications are not supported on this system');
       return;
@@ -659,25 +824,25 @@ class KarukuApp {
 
     try {
       console.log('🚀 Creating notification...');
-      const notification = new Notification({ 
-        title, 
+      const notification = new Notification({
+        title,
         body,
         icon: path.join(__dirname, '../../assets/app-icon.png'), // アプリアイコンを追加
-        sound: 'default' // デフォルトサウンドを追加
+        sound: 'default', // デフォルトサウンドを追加
       });
-      
+
       notification.on('show', () => {
         console.log('✅ Notification successfully shown');
       });
-      
+
       notification.on('click', () => {
         console.log('👆 Notification clicked');
       });
-      
+
       notification.on('close', () => {
         console.log('❌ Notification closed');
       });
-      
+
       notification.on('failed', (error) => {
         console.error('❌ Notification failed to show:', error);
         // 初回失敗時のみ、ユーザーに設定確認を促す
@@ -686,7 +851,7 @@ class KarukuApp {
           this.promptForNotificationPermission();
         }
       });
-      
+
       notification.show();
       console.log(`✅ Notification command sent: ${title}`);
     } catch (error) {
@@ -699,7 +864,248 @@ class KarukuApp {
     }
   }
 
+  private async openNotificationSettings(): Promise<void> {
+    console.log('🔧 Opening notification settings...');
 
+    if (process.platform === 'darwin') {
+      try {
+        // macOSバージョンを取得
+        const osVersion = await this.getMacOSVersion();
+        console.log(`🍎 macOS version: ${osVersion}`);
+
+        if (osVersion >= 13) {
+          // macOS Ventura (13.0+) - System Settingsの通知トップを開く
+          await this.openVenturaNotificationSettings();
+        } else if (osVersion >= 12) {
+          // macOS Monterey (12.0+) - System Preferencesの通知トップを開く
+          await this.openMontereyNotificationSettings();
+        } else {
+          // 古いmacOS - 汎用的な方法
+          await this.openGenericNotificationSettings();
+        }
+      } catch (error) {
+        console.error('❌ Failed to open notification settings:', error);
+        // エラーの場合は汎用的な通知設定を開く
+        this.openGenericNotificationSettings();
+      }
+    } else {
+      console.log(
+        'ℹ️ Notification settings opening is only supported on macOS'
+      );
+    }
+  }
+
+  private async getMacOSVersion(): Promise<number> {
+    return new Promise((resolve) => {
+      exec('sw_vers -productVersion', (error, stdout) => {
+        if (error) {
+          console.error('Failed to get macOS version:', error);
+          resolve(12); // デフォルトとしてMontereyを仮定
+          return;
+        }
+
+        const version = stdout.trim();
+        const majorVersion = parseInt(version.split('.')[0]);
+        resolve(majorVersion);
+      });
+    });
+  }
+
+  private async openVenturaNotificationSettings(): Promise<void> {
+    console.log('🎆 Opening macOS Ventura/Sonoma notification settings...');
+
+    // 通知設定のトップページを開くコマンド
+    const venturaCommands = [
+      `open "x-apple.systemsettings:com.apple.settings.notifications"`,
+      `open "x-apple.systemsettings:notifications"`,
+    ];
+
+    for (const command of venturaCommands) {
+      try {
+        console.log(`🚀 Executing: ${command}`);
+        await new Promise((resolve, reject) => {
+          exec(command, (error) => {
+            if (error) {
+              console.log(`❌ Command failed: ${command}`);
+              reject(error);
+            } else {
+              console.log(`✅ Command succeeded: ${command}`);
+              resolve(true);
+            }
+          });
+        });
+
+        // 成功したらメッセージを表示して終了
+        this.showNotificationSuccessMessage();
+        return;
+      } catch (error) {
+        console.log('🔄 Trying next command...');
+        continue;
+      }
+    }
+
+    // すべて失敗した場合はフォールバック
+    console.log('❌ All Ventura commands failed, falling back...');
+    this.openGenericNotificationSettings();
+  }
+
+  private async openMontereyNotificationSettings(): Promise<void> {
+    console.log('🏠 Opening macOS Monterey notification settings...');
+
+    // 通知設定のトップページを開くコマンド
+    const montereyCommands = [
+      `open "x-apple.systempreferences:com.apple.preference.notifications"`,
+    ];
+
+    for (const command of montereyCommands) {
+      try {
+        console.log(`🚀 Executing: ${command}`);
+        await new Promise((resolve, reject) => {
+          exec(command, (error) => {
+            if (error) {
+              console.log(`❌ Command failed: ${command}`);
+              reject(error);
+            } else {
+              console.log(`✅ Command succeeded: ${command}`);
+              resolve(true);
+            }
+          });
+        });
+
+        // 成功したらメッセージを表示して終了
+        this.showNotificationSuccessMessage();
+        return;
+      } catch (error) {
+        console.log('🔄 Trying next command...');
+        continue;
+      }
+    }
+
+    // すべて失敗した場合はフォールバック
+    console.log('❌ All Monterey commands failed, falling back...');
+    this.openGenericNotificationSettings();
+  }
+
+  private showNotificationSuccessMessage(): void {
+    setTimeout(() => {
+      dialog.showMessageBox({
+        type: 'info',
+        title: '🔔 通知設定が開きました',
+        message:
+          '通知設定が開きました。アプリリストからKarukuを探してください。',
+        detail:
+          '通知を「許可」に設定して、再度「通知をテスト」ボタンをクリックして動作を確認してください。',
+        buttons: ['理解しました'],
+        defaultId: 0,
+      });
+    }, 500);
+  }
+
+  private async openNotificationSettingsWithAppleScript(
+    bundleId: string
+  ): Promise<void> {
+    const script = `
+      tell application "System Preferences"
+        activate
+        set current pane to pane "com.apple.preference.notifications"
+        delay 3
+      end tell
+      
+      tell application "System Events"
+        tell process "System Preferences"
+          try
+            -- アプリリストからKarukuを探す
+            set appList to outline 1 of scroll area 1 of group 1 of tab group 1 of window 1
+            
+            -- Karukuを探すためにリストをスクロール
+            repeat with i from 1 to count of rows of appList
+              set currentRow to row i of appList
+              try
+                set appName to value of static text 1 of UI element 1 of currentRow
+                if appName contains "Karuku" then
+                  -- Karukuを発見したらクリック
+                  select currentRow
+                  delay 0.5
+                  click currentRow
+                  delay 2
+                  
+                  -- クリック成功をログに記録
+                  log "Successfully clicked on Karuku"
+                  exit repeat
+                end if
+              on error rowError
+                -- 行の読み取りエラーはスキップ
+                log "Row read error: " & rowError
+              end try
+            end repeat
+            
+          on error generalError
+            log "General AppleScript error: " & generalError
+          end try
+        end tell
+      end tell
+    `;
+
+    exec(`osascript -e '${script}'`, (error, stdout, stderr) => {
+      if (error) {
+        console.log('📝 AppleScript approach failed, trying fallback...');
+        console.error('AppleScript error:', error.message);
+        if (stderr) console.error('AppleScript stderr:', stderr);
+
+        // フォールバック: 汎用的な通知設定を開く
+        this.openGenericNotificationSettings();
+      } else {
+        console.log('✅ AppleScript completed');
+        if (stdout) console.log('AppleScript output:', stdout);
+
+        // 成功メッセージを表示
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: 'info',
+            title: mainI18n.t('dialog.notificationInstruction.title'),
+            message: '✅ Karukuの通知設定が開きました',
+            detail:
+              '通知を「許可」に設定して、再度「通知をテスト」ボタンをクリックして動作を確認してください。',
+            buttons: [mainI18n.t('dialog.notificationInstruction.understood')],
+            defaultId: 0,
+          });
+        }, 1000);
+      }
+    });
+  }
+
+  private async openGenericNotificationSettings(): Promise<void> {
+    console.log('🔄 Opening generic notification settings as fallback...');
+
+    // 汎用的な通知設定を開く（フォールバック）
+    exec(
+      'open "x-apple.systempreferences:com.apple.preference.notifications"',
+      (error) => {
+        if (error) {
+          console.log('🔄 Opening System Preferences main page...');
+          exec('open "x-apple.systempreferences:com.apple.preference"');
+        } else {
+          console.log('✅ Generic notification settings opened');
+
+          // ユーザーにKarukuを手動で探すように指示
+          this.showNotificationSearchInstruction();
+        }
+      }
+    );
+  }
+
+  private async showNotificationSearchInstruction(): Promise<void> {
+    setTimeout(() => {
+      dialog.showMessageBox({
+        type: 'info',
+        title: mainI18n.t('dialog.notificationInstruction.title'),
+        message: mainI18n.t('dialog.notificationInstruction.message'),
+        detail: mainI18n.t('dialog.notificationInstruction.detail'),
+        buttons: [mainI18n.t('dialog.notificationInstruction.understood')],
+        defaultId: 0,
+      });
+    }, 1500); // 設定画面が開くまで少し待つ
+  }
 
   private async promptForNotificationPermission(): Promise<void> {
     const result = await dialog.showMessageBox({
@@ -709,17 +1115,14 @@ class KarukuApp {
       detail: mainI18n.t('dialog.notificationPermission.detail'),
       buttons: [
         mainI18n.t('dialog.notificationPermission.openSettings'),
-        mainI18n.t('dialog.notificationPermission.cancel')
+        mainI18n.t('dialog.notificationPermission.cancel'),
       ],
       defaultId: 0,
-      cancelId: 1
+      cancelId: 1,
     });
 
     if (result.response === 0) {
-      // システム設定を開く（macOS）
-      if (process.platform === 'darwin') {
-        exec('open "x-apple.systempreferences:com.apple.preference.notifications"');
-      }
+      await this.openNotificationSettings();
     }
   }
 

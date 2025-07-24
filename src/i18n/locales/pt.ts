@@ -54,6 +54,8 @@ const pt = {
   'notification.optimizationFailed': 'Falha ao otimizar: {{fileName}}',
   'notification.directoryAdded': 'Diretório adicionado à lista de monitoramento: {{path}}',
   'notification.directoryRemoved': 'Diretório removido da lista de monitoramento: {{path}}',
+  'notification.permissionRequired': 'Permissão de notificação é necessária. Por favor, permita notificações nas Configurações do Sistema e tente novamente.',
+  'notification.testFailed': 'Falha ao testar notificação. Por favor, tente novamente.',
   
   // Empty state messages
   'emptyState.noDirectories': 'Nenhum diretório está sendo monitorado.',

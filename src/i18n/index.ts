@@ -66,6 +66,8 @@ type TranslationKey =
   | 'notification.optimizationFailed'
   | 'notification.directoryAdded'
   | 'notification.directoryRemoved'
+  | 'notification.permissionRequired'
+  | 'notification.testFailed'
   
   // Empty state messages
   | 'emptyState.noDirectories'

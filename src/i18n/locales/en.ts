@@ -54,6 +54,8 @@ const en = {
   'notification.optimizationFailed': 'Failed to optimize: {{fileName}}',
   'notification.directoryAdded': 'Directory added to watch list: {{path}}',
   'notification.directoryRemoved': 'Directory removed from watch list: {{path}}',
+  'notification.permissionRequired': 'Notification permission is required. Please allow notifications in System Settings and try again.',
+  'notification.testFailed': 'Failed to test notification. Please try again.',
   
   // Empty state messages
   'emptyState.noDirectories': 'No directories are being watched.',

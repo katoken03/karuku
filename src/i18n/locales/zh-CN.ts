@@ -54,6 +54,8 @@ const zhCN = {
   'notification.optimizationFailed': '优化失败：{{fileName}}',
   'notification.directoryAdded': '目录已添加到监视列表：{{path}}',
   'notification.directoryRemoved': '目录已从监视列表中移除：{{path}}',
+  'notification.permissionRequired': '需要通知权限。请在系统设置中允许通知并重试。',
+  'notification.testFailed': '测试通知失败。请重试。',
   
   // Empty state messages
   'emptyState.noDirectories': '没有正在监视的目录。',

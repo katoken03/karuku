@@ -54,6 +54,8 @@ const de = {
   'notification.optimizationFailed': 'Optimierung fehlgeschlagen: {{fileName}}',
   'notification.directoryAdded': 'Verzeichnis zur Überwachungsliste hinzugefügt: {{path}}',
   'notification.directoryRemoved': 'Verzeichnis aus Überwachungsliste entfernt: {{path}}',
+  'notification.permissionRequired': 'Benachrichtigungsberechtigung erforderlich. Bitte erlauben Sie Benachrichtigungen in den Systemeinstellungen und versuchen Sie es erneut.',
+  'notification.testFailed': 'Test der Benachrichtigung fehlgeschlagen. Bitte versuchen Sie es erneut.',
   
   // Empty state messages
   'emptyState.noDirectories': 'Keine Verzeichnisse werden überwacht.',

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { AppConfig, WatchConfig, ProcessedFile, InstallationResult } from '../types/index';
+import { AppConfig, WatchConfig, ProcessedFile, InstallationResult, NotificationTestResult, NotificationPermissionStatus } from '../types/index';
 
 const electronAPI = {
   getConfig: (): Promise<AppConfig> => ipcRenderer.invoke('get-config'),
@@ -11,7 +11,8 @@ const electronAPI = {
   openLogFile: (): Promise<void> => ipcRenderer.invoke('open-log-file'),
   checkPngquant: (): Promise<boolean> => ipcRenderer.invoke('check-pngquant'),
   installPngquant: (): Promise<InstallationResult> => ipcRenderer.invoke('install-pngquant'),
-  testNotification: (): Promise<boolean> => ipcRenderer.invoke('test-notification'),
+  testNotification: (): Promise<NotificationTestResult> => ipcRenderer.invoke('test-notification'),
+  checkNotificationPermission: (): Promise<NotificationPermissionStatus> => ipcRenderer.invoke('check-notification-permission'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
