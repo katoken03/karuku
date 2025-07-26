@@ -8,6 +8,7 @@ import {
   Notification,
   shell,
   nativeImage,
+  screen,
 } from 'electron';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -109,6 +110,7 @@ class KarukuApp {
       watchConfigs,
       notifications: true,
       autoStart: true,
+      retinaOptimization: this.isRetinaDisplay(),
     };
   }
 
@@ -638,6 +640,11 @@ class KarukuApp {
     ipcMain.handle('check-notification-permission', async () => {
       return await this.checkNotificationPermission();
     });
+
+    // ディスプレイ情報を取得
+    ipcMain.handle('get-display-info', () => {
+      return this.getDisplayInfo();
+    });
   }
 
   private startWatching(): void {
@@ -649,7 +656,7 @@ class KarukuApp {
   }
 
   private startWatchingConfig(config: WatchConfig): void {
-    this.fileWatcher.startWatching(config, (filePath, result) => {
+    this.fileWatcher.startWatching(config, this.config.retinaOptimization, (filePath, result) => {
       if (this.config.notifications) {
         const title = result.success
           ? mainI18n.t('notification.imageOptimized')
@@ -667,7 +674,12 @@ class KarukuApp {
               result.originalSize) *
               100
           );
-          body = `圧縮率 ( ${compressionRatio}% ) : ${path.basename(filePath)}`;
+          
+          // リサイズ情報を含めた通知メッセージ
+          const resizeInfo = result.resized 
+            ? ` (${result.originalDimensions?.width}x${result.originalDimensions?.height} → ${result.resizedDimensions?.width}x${result.resizedDimensions?.height})` 
+            : '';
+          body = `圧縮率 ( ${compressionRatio}% )${resizeInfo} : ${path.basename(filePath)}`;
         } else if (result.success) {
           body = `Successfully optimized: ${path.basename(filePath)}`;
         } else {
@@ -1123,6 +1135,34 @@ class KarukuApp {
 
     if (result.response === 0) {
       await this.openNotificationSettings();
+    }
+  }
+
+  // Retina検出機能
+  private isRetinaDisplay(): boolean {
+    try {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const scaleFactor = primaryDisplay.scaleFactor;
+      console.log(`🖥️ Primary display scale factor: ${scaleFactor}`);
+      return scaleFactor > 1;
+    } catch (error) {
+      console.error('❌ Failed to detect retina display:', error);
+      return false;
+    }
+  }
+
+  private getDisplayInfo(): { isRetina: boolean; scaleFactor: number } {
+    try {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const scaleFactor = primaryDisplay.scaleFactor;
+      const isRetina = scaleFactor > 1;
+      
+      console.log(`🖥️ Display info - Scale factor: ${scaleFactor}, Retina: ${isRetina}`);
+      
+      return { isRetina, scaleFactor };
+    } catch (error) {
+      console.error('❌ Failed to get display info:', error);
+      return { isRetina: false, scaleFactor: 1 };
     }
   }
 

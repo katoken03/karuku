@@ -118,6 +118,13 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRetinaOptimizationToggle = (enabled: boolean) => {
+    if (config) {
+      const newConfig = { ...config, retinaOptimization: enabled };
+      saveConfig(newConfig);
+    }
+  };
+
   const handleLanguageChange = (language: LanguageCode) => {
     console.log('Language change requested:', language);
     setLanguage(language);
@@ -222,6 +229,17 @@ const App: React.FC = () => {
           >
             {t('settings.testNotification')}
           </button>
+        </div>
+        <div className="setting-row">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={config.retinaOptimization}
+              onChange={(e) => handleRetinaOptimizationToggle(e.target.checked)}
+              className="checkbox"
+            />
+            {t('settings.retinaOptimization')}
+          </label>
         </div>
       </section>
 

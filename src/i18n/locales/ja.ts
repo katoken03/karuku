@@ -13,6 +13,7 @@ const ja = {
   'settings.notifications': '通知',
   'settings.testNotification': '通知をテスト',
   'settings.autoStart': '自動起動',
+  'settings.retinaOptimization': '半分のサイズにリサイズ',
   'settings.addDirectory': 'ディレクトリを追加',
   'settings.removeDirectory': 'ディレクトリを削除',
   'settings.enabled': '有効',

@@ -9,6 +9,7 @@ export type AppConfig = {
   watchConfigs: WatchConfig[];
   notifications: boolean;
   autoStart: boolean;
+  retinaOptimization: boolean;
 };
 
 export type ProcessedFile = {
@@ -18,6 +19,9 @@ export type ProcessedFile = {
   timestamp: Date;
   success: boolean;
   error?: string;
+  resized?: boolean;
+  originalDimensions?: { width: number; height: number };
+  resizedDimensions?: { width: number; height: number };
 };
 
 export type LogEntry = {

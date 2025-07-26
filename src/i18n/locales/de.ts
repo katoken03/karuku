@@ -13,6 +13,7 @@ const de = {
   'settings.notifications': 'Benachrichtigungen',
   'settings.testNotification': 'Benachrichtigung testen',
   'settings.autoStart': 'Automatischer Start',
+  'settings.retinaOptimization': 'Auf halbe Größe skalieren',
   'settings.addDirectory': 'Verzeichnis hinzufügen',
   'settings.removeDirectory': 'Verzeichnis entfernen',
   'settings.enabled': 'Aktiviert',

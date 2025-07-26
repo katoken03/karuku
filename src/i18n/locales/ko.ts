@@ -13,6 +13,7 @@ const ko = {
   'settings.notifications': '알림',
   'settings.testNotification': '알림 테스트',
   'settings.autoStart': '자동 시작',
+  'settings.retinaOptimization': '절반 크기로 조정',
   'settings.addDirectory': '디렉토리 추가',
   'settings.removeDirectory': '디렉토리 제거',
   'settings.enabled': '활성화됨',

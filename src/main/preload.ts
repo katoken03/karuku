@@ -13,6 +13,7 @@ const electronAPI = {
   installPngquant: (): Promise<InstallationResult> => ipcRenderer.invoke('install-pngquant'),
   testNotification: (): Promise<NotificationTestResult> => ipcRenderer.invoke('test-notification'),
   checkNotificationPermission: (): Promise<NotificationPermissionStatus> => ipcRenderer.invoke('check-notification-permission'),
+  getDisplayInfo: (): Promise<{ isRetina: boolean; scaleFactor: number }> => ipcRenderer.invoke('get-display-info'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

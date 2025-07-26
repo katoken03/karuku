@@ -31,7 +31,7 @@
     "directories": {
       "output": "dist-electron"
     },
-    "electronVersion": "25.9.0",
+    "electronVersion": "27.3.11",
     "compression": "maximum",
     "removePackageScripts": true,
     "nodeGypRebuild": false,
@@ -57,15 +57,21 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         },
         {
           "target": "dmg",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "dmg",
-          "arch": ["universal"]
+          "arch": [
+            "universal"
+          ]
         }
       ],
       "hardenedRuntime": false,
@@ -77,16 +83,18 @@
     "publish": null
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@types/electron": "^1.6.10",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "@types/uuid": "^9.0.7",
-    "@types/electron": "^1.6.10",
     "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.8.1",
-    "electron": "^25.9.0",
-    "electron-builder": "^24.8.1",
+    "electron": "^27.3.11",
+    "electron-builder": "^25.1.8",
+    "electron-rebuild": "^3.2.9",
     "html-webpack-plugin": "^5.5.4",
     "style-loader": "^3.3.3",
     "ts-loader": "^9.5.1",
@@ -99,6 +107,7 @@
     "chokidar": "^3.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "sharp": "^0.34.3",
     "uuid": "^9.0.1"
   }
 }

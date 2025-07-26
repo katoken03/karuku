@@ -25,6 +25,7 @@ type TranslationKey =
   | 'settings.notifications'
   | 'settings.testNotification'
   | 'settings.autoStart'
+  | 'settings.retinaOptimization'
   | 'settings.addDirectory'
   | 'settings.removeDirectory'
   | 'settings.enabled'

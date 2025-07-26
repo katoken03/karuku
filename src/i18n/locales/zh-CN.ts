@@ -13,6 +13,7 @@ const zhCN = {
   'settings.notifications': '通知',
   'settings.testNotification': '测试通知',
   'settings.autoStart': '自动启动',
+  'settings.retinaOptimization': '调整为半尺寸',
   'settings.addDirectory': '添加目录',
   'settings.removeDirectory': '移除目录',
   'settings.enabled': '已启用',

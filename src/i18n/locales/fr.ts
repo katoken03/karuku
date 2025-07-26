@@ -13,6 +13,7 @@ const fr = {
   'settings.notifications': 'Notifications',
   'settings.testNotification': 'Tester les notifications',
   'settings.autoStart': 'Démarrage automatique',
+  'settings.retinaOptimization': 'Redimensionner à la moitié de la taille',
   'settings.addDirectory': 'Ajouter un répertoire',
   'settings.removeDirectory': 'Supprimer le répertoire',
   'settings.enabled': 'Activé',

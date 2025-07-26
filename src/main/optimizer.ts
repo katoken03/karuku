@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { promises as fs } from 'fs';
 import { promisify } from 'util';
 import path from 'path';
+import sharp from 'sharp';
 import { ProcessedFile } from '../types/index';
 
 const execAsync = promisify(exec);
@@ -70,7 +71,7 @@ export class ImageOptimizer {
     return null;
   }
 
-  async optimizeImage(filePath: string): Promise<ProcessedFile> {
+  async optimizeImage(filePath: string, enableRetinaResize: boolean = false): Promise<ProcessedFile> {
     const result: ProcessedFile = {
       filePath,
       originalSize: 0,
@@ -80,15 +81,20 @@ export class ImageOptimizer {
     };
 
     try {
+      // 元のファイルサイズを取得
+      const originalStats = await fs.stat(filePath);
+      result.originalSize = originalStats.size;
+
+      // Retinaディスプレイでのリサイズが有効な場合
+      if (enableRetinaResize) {
+        await this.resizeImageForRetina(filePath, result);
+      }
+
       // pngquantのパスを取得
       const pngquantPath = await this.findPngquantPath();
       if (!pngquantPath) {
         throw new Error('pngquant not found. Please install pngquant using: brew install pngquant');
       }
-
-      // 元のファイルサイズを取得
-      const originalStats = await fs.stat(filePath);
-      result.originalSize = originalStats.size;
 
       // pngquantで最適化（元ファイルを上書き）
       const command = `"${pngquantPath}" --force --ext .png "${filePath}"`;
@@ -103,7 +109,8 @@ export class ImageOptimizer {
       // ログに記録
       await this.logProcessedFile(result);
 
-      console.log(`Optimized: ${filePath} (${originalStats.size} → ${optimizedStats.size} bytes)`);
+      const resizeInfo = result.resized ? ` (resized from ${result.originalDimensions?.width}x${result.originalDimensions?.height} to ${result.resizedDimensions?.width}x${result.resizedDimensions?.height})` : '';
+      console.log(`Optimized: ${filePath} (${originalStats.size} → ${optimizedStats.size} bytes)${resizeInfo}`);
     } catch (error) {
       result.error = error instanceof Error ? error.message : String(error);
       await this.logProcessedFile(result);
@@ -111,6 +118,63 @@ export class ImageOptimizer {
     }
 
     return result;
+  }
+
+  private async resizeImageForRetina(filePath: string, result: ProcessedFile): Promise<void> {
+    try {
+      console.log(`🔍 Analyzing image for Retina resize: ${filePath}`);
+      
+      // 画像のメタデータを取得
+      const metadata = await sharp(filePath).metadata();
+      
+      if (!metadata.width || !metadata.height) {
+        console.log('⚠️ Unable to get image dimensions, skipping resize');
+        return;
+      }
+
+      const originalWidth = metadata.width;
+      const originalHeight = metadata.height;
+      
+      // 縦横半分のサイズを計算
+      const newWidth = Math.floor(originalWidth / 2);
+      const newHeight = Math.floor(originalHeight / 2);
+      
+      console.log(`📐 Resizing image: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight}`);
+      
+      // リサイズを実行
+      await sharp(filePath)
+        .resize(newWidth, newHeight, {
+          kernel: sharp.kernel.lanczos3,  // 高品質なリサイズアルゴリズム
+          withoutEnlargement: true,     // 拡大は行わない
+        })
+        .png({
+          compressionLevel: 6,           // PNG圧縮レベル
+          adaptiveFiltering: true,       // 適応フィルタリング
+        })
+        .toFile(filePath + '.tmp');
+      
+      // 元ファイルを置き換え
+      await fs.rename(filePath + '.tmp', filePath);
+      
+      // リサイズ情報を記録
+      result.resized = true;
+      result.originalDimensions = { width: originalWidth, height: originalHeight };
+      result.resizedDimensions = { width: newWidth, height: newHeight };
+      
+      console.log(`✅ Image resized successfully: ${filePath}`);
+    } catch (error) {
+      console.error(`❌ Failed to resize image: ${filePath}`, error);
+      
+      // 一時ファイルをクリーンアップ
+      try {
+        await fs.unlink(filePath + '.tmp');
+      } catch {
+        // 一時ファイルが存在しない場合は無視
+      }
+      
+      // リサイズに失敗してもエラーは投げない（最適化は続行）
+      result.error = `Resize failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
   }
 
   private async logProcessedFile(result: ProcessedFile): Promise<void> {

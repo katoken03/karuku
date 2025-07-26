@@ -13,6 +13,7 @@ const en = {
   'settings.notifications': 'Notifications',
   'settings.testNotification': 'Test Notification',
   'settings.autoStart': 'Auto Start',
+  'settings.retinaOptimization': 'Resize to half size',
   'settings.addDirectory': 'Add Directory',
   'settings.removeDirectory': 'Remove Directory',
   'settings.enabled': 'Enabled',

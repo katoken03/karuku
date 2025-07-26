@@ -29,13 +29,8 @@ module.exports = [
     externals: {
       'fsevents': 'require("fsevents")',
       'chokidar': 'require("chokidar")',
-      'electron': 'require("electron")'
-    },
-    resolve: {
-      extensions: ['.ts', '.js'],
-      fallback: {
-        'fsevents': false
-      }
+      'electron': 'require("electron")',
+      'sharp': 'require("sharp")'
     },
     resolve: {
       extensions: ['.ts', '.js'],
@@ -78,7 +73,8 @@ module.exports = [
     externals: {
       'fsevents': 'require("fsevents")',
       'chokidar': 'require("chokidar")',
-      'electron': 'require("electron")'
+      'electron': 'require("electron")',
+      'sharp': 'require("sharp")'
     },
   },
   // Renderer process (settings)
