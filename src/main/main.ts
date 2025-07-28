@@ -42,8 +42,16 @@ class KarukuApp {
   private optimizer: ImageOptimizer;
   private dependencyInstaller: DependencyInstaller;
   private hasShownPermissionDialog: boolean = false;
+  private isDebugMode: boolean = false;
 
   constructor() {
+    // デバッグモードの判定
+    this.isDebugMode = process.env.KEEP_CONSOLE_LOGS === 'true' || 
+                      process.env.NODE_ENV === 'development' || 
+                      !!process.env.DEBUG;
+    
+    console.log(`🔧 Debug mode: ${this.isDebugMode}`);
+    
     this.configDir = path.join(
       os.homedir(),
       'Library',
@@ -56,6 +64,58 @@ class KarukuApp {
     this.fileWatcher = new FileWatcher(this.optimizer);
     this.dependencyInstaller = new DependencyInstaller((progress) => {
       this.handleInstallationProgress(progress);
+    });
+    
+    // DevToolsキーボードショートカットの無効化（本番ビルド時のみ）
+    if (!this.isDebugMode) {
+      this.disableDevToolsShortcuts();
+    }
+  }
+
+  // DevToolsキーボードショートカットの無効化
+  private disableDevToolsShortcuts(): void {
+    console.log('🚫 Disabling DevTools shortcuts for production build');
+    
+    app.on('web-contents-created', (_, contents) => {
+      contents.on('before-input-event', (event, input) => {
+        // Command+Option+I (macOS) または Ctrl+Shift+I (Windows/Linux)
+        const isCmdOptI = process.platform === 'darwin' 
+          ? (input.meta && input.alt && input.key.toLowerCase() === 'i')
+          : (input.control && input.shift && input.key.toLowerCase() === 'i');
+        
+        // F12 キー
+        const isF12 = input.key === 'F12';
+        
+        // Command+Option+J (macOS) または Ctrl+Shift+J (Windows/Linux) - Console
+        const isCmdOptJ = process.platform === 'darwin'
+          ? (input.meta && input.alt && input.key.toLowerCase() === 'j')
+          : (input.control && input.shift && input.key.toLowerCase() === 'j');
+        
+        // Command+Option+C (macOS) または Ctrl+Shift+C (Windows/Linux) - Element inspector
+        const isCmdOptC = process.platform === 'darwin'
+          ? (input.meta && input.alt && input.key.toLowerCase() === 'c')
+          : (input.control && input.shift && input.key.toLowerCase() === 'c');
+        
+        if (isCmdOptI || isF12 || isCmdOptJ || isCmdOptC) {
+          console.log(`🚫 Blocked DevTools shortcut: ${input.key}`);
+          event.preventDefault();
+        }
+      });
+      
+      // 右クリックコンテキストメニューも無効化
+      contents.on('context-menu', (event) => {
+        event.preventDefault();
+        console.log('🚫 Blocked context menu');
+      });
+      
+      // DevToolsの直接開くメソッドを無効化
+      if (contents.getType() === 'window') {
+        const originalOpenDevTools = contents.openDevTools;
+        contents.openDevTools = () => {
+          console.log('🚫 Blocked openDevTools() call');
+          // 何もしない
+        };
+      }
     });
   }
 
@@ -463,6 +523,8 @@ class KarukuApp {
         nodeIntegration: false,
         contextIsolation: true,
         preload: path.join(__dirname, 'preload.js'),
+        webSecurity: this.isDebugMode ? false : true, // デバッグ時のみ無効化
+        devTools: this.isDebugMode, // デバッグ時のみ有効
       },
     });
 
@@ -478,7 +540,7 @@ class KarukuApp {
     this.settingsWindow.once('ready-to-show', () => {
       this.settingsWindow?.show();
       // 開発環境では開発者ツールを自動で開く
-      if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      if (this.isDebugMode) {
         this.settingsWindow?.webContents.openDevTools();
       }
       console.log('Settings window after show:');
@@ -516,6 +578,8 @@ class KarukuApp {
         nodeIntegration: false,
         contextIsolation: true,
         preload: path.join(__dirname, 'preload.js'),
+        webSecurity: this.isDebugMode ? false : true, // デバッグ時のみ無効化
+        devTools: this.isDebugMode, // デバッグ時のみ有効
       },
     });
 
@@ -529,7 +593,7 @@ class KarukuApp {
     this.logWindow.once('ready-to-show', () => {
       this.logWindow?.show();
       // 開発環境では開発者ツールを自動で開く
-      if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      if (this.isDebugMode) {
         this.logWindow?.webContents.openDevTools();
       }
       console.log('Log window after show:');

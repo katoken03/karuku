@@ -1,13 +1,66 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+
+// デバッグモードの判定
+const isProduction = process.env.NODE_ENV === 'production';
+const keepConsoleLogs = process.env.KEEP_CONSOLE_LOGS === 'true';
+const shouldDropConsole = isProduction && !keepConsoleLogs;
+
+console.log('🔍 Webpack Console Log Optimization Debug:');
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  KEEP_CONSOLE_LOGS:', process.env.KEEP_CONSOLE_LOGS);
+console.log('  isProduction:', isProduction);
+console.log('  keepConsoleLogs:', keepConsoleLogs);
+console.log('  shouldDropConsole:', shouldDropConsole);
+
+// 最適化設定（強制的にconsole.logを削除）
+const getOptimization = () => {
+  if (!isProduction) {
+    return {};
+  }
+  
+  console.log('🛠️ Configuring TerserPlugin with drop_console:', shouldDropConsole);
+  
+  return {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+        terserOptions: {
+          compress: {
+            drop_console: shouldDropConsole,
+            drop_debugger: true,
+            pure_funcs: shouldDropConsole ? [
+              'console.log', 
+              'console.warn', 
+              'console.info', 
+              'console.debug',
+              'console.trace'
+            ] : [],
+            passes: 3, // より徹底的な最適化
+          },
+          mangle: {
+            safari10: true,
+          },
+          output: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
+  };
+};
 
 module.exports = [
   // Main process
   {
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    mode: isProduction ? 'production' : 'development',
     entry: './src/main/main.ts',
     target: 'electron-main',
+    optimization: getOptimization(),
     module: {
       rules: [
         {
@@ -15,10 +68,8 @@ module.exports = [
           use: 'ts-loader',
           exclude: /node_modules/,
         },
-
       ],
     },
-
     output: {
       filename: 'main.js',
       path: path.resolve(__dirname, 'dist/main'),
@@ -49,9 +100,10 @@ module.exports = [
   },
   // Preload script
   {
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    mode: isProduction ? 'production' : 'development',
     entry: './src/main/preload.ts',
     target: 'electron-preload',
+    optimization: getOptimization(),
     module: {
       rules: [
         {
@@ -59,10 +111,8 @@ module.exports = [
           use: 'ts-loader',
           exclude: /node_modules/,
         },
-
       ],
     },
-
     output: {
       filename: 'preload.js',
       path: path.resolve(__dirname, 'dist/main'),
@@ -76,12 +126,16 @@ module.exports = [
       'electron': 'require("electron")',
       'sharp': 'require("sharp")'
     },
+    resolve: {
+      extensions: ['.ts', '.js'],
+    },
   },
   // Renderer process (settings)
   {
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    mode: isProduction ? 'production' : 'development',
     entry: './src/renderer/index.tsx',
     target: 'electron-renderer',
+    optimization: getOptimization(),
     module: {
       rules: [
         {
@@ -112,9 +166,10 @@ module.exports = [
   },
   // Renderer process (logs)
   {
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    mode: isProduction ? 'production' : 'development',
     entry: './src/renderer/logs.tsx',
     target: 'electron-renderer',
+    optimization: getOptimization(),
     module: {
       rules: [
         {

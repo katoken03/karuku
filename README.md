@@ -1,3 +1,34 @@
+## DevTools（開発者ツール）制御について
+
+### 本番ビルド（`npm run dist:arm64`）
+- ✅ **Command+Option+I** キーボードショートカットが無効化
+- ✅ **F12** キーが無効化
+- ✅ **Command+Option+J**（コンソール）が無効化
+- ✅ **Command+Option+C**（要素検査）が無効化
+- ✅ **右クリックコンテキストメニュー**が無効化
+- ✅ **openDevTools() メソッド**が無効化
+- ✅ **console.log** が自動削除されファイルサイズが縮小
+
+### デバッグビルド（`npm run dist:arm64:withDebug`）
+- ✅ **すべてのDevToolsショートカット**が利用可能
+- ✅ **右クリックコンテキストメニュー**が利用可能
+- ✅ **console.log** が保持されデバッグが可能
+- ✅ **開発者ツールが自動で開く**
+
+### 動作テスト方法
+
+1. **本番ビルドテスト**:
+   ```bash
+   npm run test:devtools:disabled
+   ```
+   - Command+Option+Iを押してもDevToolsが開かないことを確認
+
+2. **デバッグビルドテスト**:
+   ```bash
+   npm run test:devtools:enabled
+   ```
+   - Command+Option+IでDevToolsが開くことを確認
+
 # Karuku - Image Optimizer
 
 PNG画像を自動最適化するElectronアプリです。
@@ -11,6 +42,8 @@ PNG画像を自動最適化するElectronアプリです。
 - **設定管理**: 複数ディレクトリの監視とパターンカスタマイズ
 - **ログ機能**: 処理履歴の確認とファイルサイズ節約量の表示
 - **多言語対応**: 8言語対応（英語、日本語、中国語、スペイン語、フランス語、ドイツ語、韓国語、ポルトガル語）
+- **Console.log削除による最適化**: 本番ビルドでconsole.logが自動削除されてビルドサイズが縮小されます
+- **DevTools（開発者ツール）制御**: 本番ビルドではCommand+Option+Iなどの開発者ツールを無効化
 
 ## 必要な環境
 
@@ -40,6 +73,10 @@ npm run build
 npm start
 
 # 配布用パッケージの作成
+
+## 本番リリース（DevTools無効、console.log削除）
+
+```bash
 # ARM64版（Apple Silicon Mac専用・サイズ小）
 npm run dist:arm64
 
@@ -48,12 +85,51 @@ npm run dist:intel
 
 # Universal版（両方対応・サイズ大）
 npm run dist:universal
+```
+
+## デバッグリリース（DevTools有効、console.log保持）
+
+```bash
+# ARM64版（デバッグ付き）
+npm run dist:arm64:withDebug
+```
+
+## テスト用コマンド
+
+```bash
+# DevTools制御のテスト
+node test-devtools-control.js
+
+# 本番ビルド（DevTools無効）のテスト
+npm run test:devtools:disabled
+
+# デバッグビルド（DevTools有効）のテスト
+npm run test:devtools:enabled
+```
 
 # 全アーキテクチャ版を同時作成
 npm run dist:all
 
 # デフォルト（Universal版）
 npm run dist
+
+# デバッグログ付き本番ビルド（トラブルシューティング用）
+npm run dist:arm64:withDebug
+```
+
+### ビルド最適化について
+
+**Console.log削除による最適化**
+- 本番ビルドではconsole.logが自動削除されてビルドサイズが縮小されます
+- デバッグが必要な場合は`dist:arm64:withDebug`を使用してconsole.logを保持できます
+
+```bash
+# テスト用ビルドコマンド
+npm run build:production:no-logs      # console.log削除
+npm run build:production:with-logs    # console.log保持
+
+# ビルドサイズテスト
+node test-console-optimization.js
 ```
 
 ### アーキテクチャ別ビルドについて

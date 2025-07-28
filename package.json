@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "concurrently \"webpack --mode development --watch\" \"wait-on dist/main/main.js && npx electron .\"",
     "start": "npm run build:dev; npx electron .",
-    "build": "webpack --mode production",
+    "build": "NODE_ENV=production webpack --mode production",
     "build:dev": "webpack --mode development",
     "start:direct": "npx electron . --verbose",
     "start:debug": "npm run build:dev && echo 'Build completed, starting electron with debug...' && DEBUG=* npx electron .",
@@ -23,7 +23,12 @@
     "dist:arm64": "rm -rf dist-electron ; npm run build ; electron-builder --mac --arm64",
     "dist:intel": "rm -rf dist-electron ; npm run build ; electron-builder --mac --x64",
     "dist:universal": "rm -rf dist-electron ; npm run build ; electron-builder --mac --universal",
-    "dist:all": "rm -rf dist-electron ; npm run build ; npm run pack:arm64 ; npm run pack:intel ; npm run pack:universal"
+    "dist:all": "rm -rf dist-electron ; npm run build ; npm run pack:arm64 ; npm run pack:intel ; npm run pack:universal",
+    "dist:arm64:withDebug": "rm -rf dist-electron ; KEEP_CONSOLE_LOGS=true npm run build ; electron-builder --mac --arm64",
+    "build:production:no-logs": "NODE_ENV=production npm run build",
+    "build:production:with-logs": "NODE_ENV=production KEEP_CONSOLE_LOGS=true npm run build",
+    "test:devtools:disabled": "NODE_ENV=production npm run build && npx electron .",
+    "test:devtools:enabled": "NODE_ENV=production KEEP_CONSOLE_LOGS=true npm run build && npx electron ."
   },
   "build": {
     "appId": "com.kato.karuku",

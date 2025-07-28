@@ -62,3 +62,4 @@ dist-electron/
 # Temporary files
 *.tmp
 *.temp
+temp-test-file.js
