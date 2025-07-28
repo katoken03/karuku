@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { WatchConfig } from '../../types/index';
 import { useTranslation } from '../../i18n';
+import '../styles/button.css';
 
 type Props = {
   config: WatchConfig;
@@ -47,7 +48,7 @@ const WatchConfigItem: React.FC<Props> = ({ config, onUpdate, onRemove }) => {
             />
             {t('settings.enabled')}
           </label>
-          <button onClick={handleRemove} style={styles.removeButton}>
+          <button onClick={handleRemove} className="btn-danger">
             {t('settings.removeDirectory')}
           </button>
         </div>
@@ -129,15 +130,6 @@ const styles = {
   },
   checkbox: {
     marginRight: '6px',
-  },
-  removeButton: {
-    backgroundColor: '#d73a49',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    padding: '6px 12px',
-    fontSize: '12px',
-    cursor: 'pointer',
   },
   patternSection: {
     display: 'flex',

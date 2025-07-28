@@ -285,16 +285,16 @@ const styles = {
     fontWeight: '500',
   },
   statusSuccess: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
+    backgroundColor: 'var(--color-sage)',
+    color: 'var(--color-dark)',
   },
   statusError: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
+    backgroundColor: 'var(--color-coral)',
+    color: 'var(--color-red)',
   },
   error: {
     fontSize: '11px',
-    color: '#dc3545',
+    color: 'var(--color-red)',
     marginTop: '4px',
     fontStyle: 'italic',
   },
