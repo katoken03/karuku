@@ -71,7 +71,7 @@ export class ImageOptimizer {
     return null;
   }
 
-  async optimizeImage(filePath: string, enableRetinaResize: boolean = false): Promise<ProcessedFile> {
+  async optimizeImage(filePath: string, resizeRatio: number | null = null): Promise<ProcessedFile> {
     const result: ProcessedFile = {
       filePath,
       originalSize: 0,
@@ -85,9 +85,9 @@ export class ImageOptimizer {
       const originalStats = await fs.stat(filePath);
       result.originalSize = originalStats.size;
 
-      // Retinaディスプレイでのリサイズが有効な場合
-      if (enableRetinaResize) {
-        await this.resizeImageForRetina(filePath, result);
+      // リサイズが指定されている場合
+      if (resizeRatio !== null) {
+        await this.resizeImage(filePath, resizeRatio, result);
       }
 
       // pngquantのパスを取得
@@ -120,9 +120,9 @@ export class ImageOptimizer {
     return result;
   }
 
-  private async resizeImageForRetina(filePath: string, result: ProcessedFile): Promise<void> {
+  private async resizeImage(filePath: string, ratio: number, result: ProcessedFile): Promise<void> {
     try {
-      console.log(`🔍 Analyzing image for Retina resize: ${filePath}`);
+      console.log(`🔍 Analyzing image for resize: ${filePath} (ratio: ${ratio})`);
       
       // 画像のメタデータを取得
       const metadata = await sharp(filePath).metadata();
@@ -135,11 +135,11 @@ export class ImageOptimizer {
       const originalWidth = metadata.width;
       const originalHeight = metadata.height;
       
-      // 縦横半分のサイズを計算
-      const newWidth = Math.floor(originalWidth / 2);
-      const newHeight = Math.floor(originalHeight / 2);
+      // 指定された比率でサイズを計算
+      const newWidth = Math.floor(originalWidth * ratio);
+      const newHeight = Math.floor(originalHeight * ratio);
       
-      console.log(`📐 Resizing image: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight}`);
+      console.log(`📐 Resizing image: ${originalWidth}x${originalHeight} → ${newWidth}x${newHeight} (${Math.round(ratio * 100)}%)`);
       
       // リサイズを実行
       await sharp(filePath)

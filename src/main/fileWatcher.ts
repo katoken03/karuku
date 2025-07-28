@@ -11,12 +11,12 @@ export class FileWatcher {
     this.optimizer = optimizer;
   }
 
-  startWatching(config: WatchConfig, enableRetinaResize: boolean = false, onFileProcessed?: (filePath: string, result: ProcessedFile) => void): void {
+  startWatching(config: WatchConfig, resizeRatio: number | null = null, onFileProcessed?: (filePath: string, result: ProcessedFile) => void): void {
     if (this.watchers.has(config.id)) {
       this.stopWatching(config.id);
     }
 
-    console.log(`Starting to watch: ${config.path} with pattern: ${config.pattern} (Retina resize: ${enableRetinaResize})`);
+    console.log(`Starting to watch: ${config.path} with pattern: ${config.pattern} (Resize ratio: ${resizeRatio})`);
 
     const watcher = chokidar.watch(config.path, {
       ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -31,7 +31,7 @@ export class FileWatcher {
         // 少し待ってからファイルが完全に書き込まれるのを確認
         setTimeout(async () => {
           try {
-            const result = await this.optimizer.optimizeImage(filePath, enableRetinaResize);
+            const result = await this.optimizer.optimizeImage(filePath, resizeRatio);
             onFileProcessed?.(filePath, result);
           } catch (error) {
             console.error(`Error processing file ${filePath}:`, error);

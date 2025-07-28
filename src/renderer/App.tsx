@@ -118,11 +118,19 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRetinaOptimizationToggle = (enabled: boolean) => {
+  const handleResizeRatioChange = (ratio: number | null) => {
     if (config) {
-      const newConfig = { ...config, retinaOptimization: enabled };
+      const newConfig = { ...config, resizeRatio: ratio };
       saveConfig(newConfig);
     }
+  };
+
+  const getResizeDisplayValue = (ratio: number | null): string => {
+    if (ratio === null) return t('resize.noResize');
+    if (ratio === 0.25) return t('resize.ratio25');
+    if (ratio === 0.5) return t('resize.ratio50');
+    if (ratio === 0.75) return t('resize.ratio75');
+    return t('resize.noResize');
   };
 
   const handleLanguageChange = (language: LanguageCode) => {
@@ -231,15 +239,26 @@ const App: React.FC = () => {
           </button>
         </div>
         <div className="setting-row">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={config.retinaOptimization}
-              onChange={(e) => handleRetinaOptimizationToggle(e.target.checked)}
-              className="checkbox"
-            />
+          <label className="setting-label">
             {t('settings.retinaOptimization')}
           </label>
+          <select 
+            value={config.resizeRatio === null ? 'none' : config.resizeRatio.toString()}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === 'none') {
+                handleResizeRatioChange(null);
+              } else {
+                handleResizeRatioChange(parseFloat(value));
+              }
+            }}
+            className="resize-select"
+          >
+            <option value="none">{t('resize.noResize')}</option>
+            <option value="0.25">{t('resize.ratio25')}</option>
+            <option value="0.5">{t('resize.ratio50')}</option>
+            <option value="0.75">{t('resize.ratio75')}</option>
+          </select>
         </div>
       </section>
 

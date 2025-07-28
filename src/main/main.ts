@@ -110,7 +110,7 @@ class KarukuApp {
       watchConfigs,
       notifications: true,
       autoStart: true,
-      retinaOptimization: this.isRetinaDisplay(),
+      resizeRatio: this.isRetinaDisplay() ? 0.5 : null,
     };
   }
 
@@ -127,8 +127,11 @@ class KarukuApp {
       const configData = await fs.readFile(this.configPath, 'utf8');
       const loadedConfig = JSON.parse(configData);
 
+      // 設定のマイグレーション処理
+      const migratedConfig = this.migrateConfig(loadedConfig);
+
       // デフォルト設定とマージ
-      this.config = { ...this.getDefaultConfig(), ...loadedConfig };
+      this.config = { ...this.getDefaultConfig(), ...migratedConfig };
 
       // 監視ディレクトリが空の場合はデフォルトを追加
       if (!this.config.watchConfigs || this.config.watchConfigs.length === 0) {
@@ -142,6 +145,12 @@ class KarukuApp {
           `✅ Default desktop watcher added: ${defaultConfig.watchConfigs[0].path}`
         );
       }
+
+      // マイグレーション後の設定を保存
+      if (migratedConfig !== loadedConfig) {
+        await this.saveConfig();
+        console.log('✅ Configuration migrated to new format');
+      }
     } catch (error) {
       // ファイルが存在しない場合はデフォルト設定を使用
       console.log('ℹ️ Config file not found, creating default configuration');
@@ -151,6 +160,19 @@ class KarukuApp {
         `✅ Default configuration created with desktop watcher: ${this.config.watchConfigs[0].path}`
       );
     }
+  }
+
+  private migrateConfig(config: any): AppConfig {
+    // retinaOptimization (boolean) → resizeRatio (number | null) のマイグレーション
+    if (config.hasOwnProperty('retinaOptimization') && !config.hasOwnProperty('resizeRatio')) {
+      console.log('🔄 Migrating retinaOptimization to resizeRatio');
+      const resizeRatio = config.retinaOptimization ? 0.5 : null;
+      config.resizeRatio = resizeRatio;
+      delete config.retinaOptimization;
+      console.log(`✅ Migration complete: resizeRatio = ${resizeRatio}`);
+    }
+
+    return config;
   }
 
   private async saveConfig(): Promise<void> {
@@ -656,7 +678,7 @@ class KarukuApp {
   }
 
   private startWatchingConfig(config: WatchConfig): void {
-    this.fileWatcher.startWatching(config, this.config.retinaOptimization, (filePath, result) => {
+    this.fileWatcher.startWatching(config, this.config.resizeRatio, (filePath, result) => {
       if (this.config.notifications) {
         const title = result.success
           ? mainI18n.t('notification.imageOptimized')

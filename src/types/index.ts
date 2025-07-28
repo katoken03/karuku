@@ -9,7 +9,7 @@ export type AppConfig = {
   watchConfigs: WatchConfig[];
   notifications: boolean;
   autoStart: boolean;
-  retinaOptimization: boolean;
+  resizeRatio: number | null; // null: リサイズしない, 0.25/0.5/0.75: 縮小率
 };
 
 export type ProcessedFile = {

@@ -59,6 +59,14 @@
 - **重複処理防止**: 処理済みファイルのトラッキング
 - **通知システム**: 処理完了・エラー通知
 
+### 6. 画像リサイズ機能（Sharp実装）
+- **リサイズライブラリ**: Sharp (v0.34.3) による高品質画像リサイズ
+- **リサイズアルゴリズム**: Lanczos3による高品質スケーリング
+- **縮小率設定**: 25%, 50%, 75%から選択可能（設定画面にて）
+- **処理フロー**: リサイズ → pngquant最適化の順で実行
+- **品質保持**: PNG圧縮レベル6、適応フィルタリング有効
+- **エラーハンドリング**: リサイズ失敗時でも最適化処理は継続
+
 ## データ構造
 
 ### 設定ファイル（JSON）
@@ -92,6 +100,7 @@ export type AppConfig = {
   watchConfigs: WatchConfig[];
   notifications: boolean;
   autoStart: boolean;
+  retinaOptimization: boolean; // 画像リサイズ機能のON/OFF
 };
 
 export type ProcessedFile = {
@@ -101,6 +110,9 @@ export type ProcessedFile = {
   timestamp: Date;
   success: boolean;
   error?: string;
+  resized?: boolean; // リサイズが実行されたかどうか
+  originalDimensions?: { width: number; height: number }; // 元の画像サイズ
+  resizedDimensions?: { width: number; height: number };  // リサイズ後の画像サイズ
 };
 
 export interface InstallationResult {
@@ -165,6 +177,7 @@ electron/
     \"chokidar\": \"^3.5.3\",     // ファイル監視
     \"react\": \"^18.2.0\",       // UI フレームワーク
     \"react-dom\": \"^18.2.0\",   // React DOM
+    \"sharp\": \"^0.34.3\",       // 高品質画像リサイズ
     \"uuid\": \"^9.0.1\"          // UUID生成
   },
   \"devDependencies\": {
@@ -320,18 +333,6 @@ electronAPI.installPngquant(): Promise<InstallationResult>
 3. **パッケージング**: `npm run dist`
 4. **配布**: DMG (macOS), NSIS (Windows), AppImage (Linux)
 
-## 今後の拡張予定
-
-### 短期
-- **複数形式対応**: JPEG, WebP最適化
-- **設定エクスポート・インポート**
-- **パフォーマンス統計**: 処理速度、圧縮率統計
-
-### 長期
-- **クラウド連携**: Google Drive, Dropbox監視
-- **バッチ処理**: 既存ファイルの一括最適化
-- **プラグインシステム**: カスタム最適化ツール対応
-- **多言語対応**: i18n対応
 
 ## 開発メモ
 
@@ -349,3 +350,128 @@ electronAPI.installPngquant(): Promise<InstallationResult>
 - **詳細ログ**: `npm run start:debug`
 - **開発者ツール**: Electronデベロッパーツール
 - **IPC通信**: コンソールログでの追跡
+
+## 修正予定・計画中の改善事項
+
+### リサイズ機能の改善 (計画中)
+
+**現在の仕様:**
+- チェックボックスによるON/OFF切り替え（50%固定）
+- 設定項目: `retinaOptimization: boolean`
+- 翻訳キー: `'settings.retinaOptimization': '半分のサイズにリサイズ'`
+
+**改善予定:**
+1. **UI変更**: チェックボックス → ドロップダウンリスト
+   ```
+   画像ピクセルサイズ：
+   [ 50%縮小 ▼ ]
+     ├ 25%縮小
+     ├ 50%縮小
+     ├ 75%縮小
+     └ 元サイズを維持
+   ```
+
+2. **設定データ構造変更**: 
+   - `retinaOptimization: boolean` → `resizeRatio: number | null`
+   - `null`: リサイズしない
+   - `0.25`: 25%に縮小
+   - `0.5`: 50%に縮小
+   - `0.75`: 75%に縮小
+
+3. **翻訳テキスト更新**:
+   - 日本語: `'半分のサイズにリサイズ'` → `'画像ピクセルサイズ'`
+   - 英語: `'Resize to half size'` → `'Image pixel size'`
+   - その他言語も同様に更新
+
+4. **実装ファイル修正対象**:
+   - `src/types/index.ts`: 型定義変更
+   - `src/renderer/App.tsx`: UI変更（ドロップダウン実装）
+   - `src/main/optimizer.ts`: 可変比率対応
+   - `src/i18n/locales/*.ts`: 全言語の翻訳更新
+
+5. **技術的詳細**:
+   - Sharp処理部分で固定50%から可変比率に変更
+   - 後方互換性の確保（既存設定の自動マイグレーション）
+   - エラーハンドリングの強化
+
+### ファイル名変更時の重複処理防止機能 (実装予定)
+
+**問題の詳細:**
+- デスクトップに画像を保存時：addイベントでリサイズ実行（正常）
+- その後ファイル名を変更時：addイベントが再発生してリサイズ再実行（問題）
+
+**根本原因:**
+chokidarはファイル名変更を「unlink（削除）→ add（追加）」のイベントシーケンスとして報告するため、リネーム後のaddイベントでも新規ファイルとして処理される。
+
+**解決方法:**
+
+1. **chokidarのatomicオプションを無効化**:
+   ```typescript
+   const watcher = chokidar.watch(config.path, {
+     atomic: false, // 🔑 キーポイント：リネーム検出のため無効化
+     // 他の設定...
+   });
+   ```
+
+   **atomicオプションの役割:**
+   - `atomic: true`（デフォルト）: テキストエディタの原子的書き込みパターン（100ms以内の削除→追加）を1つのchangeイベントに統合
+   - `atomic: false`: OSの生ファイルシステムイベント（unlink→add）をそのまま報告
+
+2. **リネーム検出ロジックの実装**:
+   ```typescript
+   export class FileWatcher {
+     private recentUnlinks = new Map<string, number>(); // ディレクトリ → タイムスタンプ
+
+     startWatching() {
+       // unlinkイベントを記録
+       watcher.on('unlink', (filePath) => {
+         if (this.matchesPattern(filePath, config.pattern)) {
+           const directory = path.dirname(filePath);
+           this.recentUnlinks.set(directory, Date.now());
+           console.log(`📝 File unlinked: ${filePath}`);
+         }
+       });
+
+       // addイベントでリネーム判定
+       watcher.on('add', async (filePath) => {
+         if (this.isLikelyRename(filePath)) {
+           console.log(`⏭️ Detected rename, skipping: ${filePath}`);
+           return; // リサイズ処理をスキップ
+         }
+         // 通常の新規ファイル処理
+       });
+     }
+
+     private isLikelyRename(filePath: string): boolean {
+       const directory = path.dirname(filePath);
+       const unlinkTime = this.recentUnlinks.get(directory);
+       
+       if (unlinkTime && Date.now() - unlinkTime < 5000) { // 5秒以内
+         this.recentUnlinks.delete(directory);
+         return true;
+       }
+       return false;
+     }
+   }
+   ```
+
+3. **修正対象ファイル**:
+   - `src/main/fileWatcher.ts`: リネーム検出ロジック追加
+   - `src/main/main.ts`: chokidarオプション変更（atomic: false）
+
+4. **利点**:
+   - ✅ リネーム時の重複処理を確実に防止
+   - ✅ PNG画像ファイルでは副作用が少ない
+   - ✅ 実装が比較的シンプル
+   - ✅ デバッグ容易（ログでunlink→addシーケンスを確認可能）
+
+5. **注意点**:
+   - ✅ テキストエディタの一時ファイルは`*.png`パターンから外れるため影響なし
+   - ⚠️ 短時間での削除→新規作成を誤ってリネームと判定するリスク（極めて稀）
+   - ✅ 既存のmatchesPattern関数による十分な保護
+   - ✅ Karukuの用途（PNG画像監視）では実用上問題なし
+
+**技術的背景:**
+- OSレベルでのファイル操作の原子性は変更不可
+- chokidarのatomicオプションは「検知して報告するか、隠蔽するか」の制御
+- PNG画像ファイルの手動リネームという用途では、atomic: falseによる副作用は最小限
