@@ -45,12 +45,15 @@ class KarukuApp {
   private isDebugMode: boolean = false;
 
   constructor() {
-    // デバッグモードの判定
-    this.isDebugMode = process.env.KEEP_CONSOLE_LOGS === 'true' || 
-                      process.env.NODE_ENV === 'development' || 
+    // デバッグモードの判定 - 開発環境、デバッグフラグ、コンソールログ保持のいずれかがtrueの場合
+    this.isDebugMode = process.env.NODE_ENV === 'development' || 
+                      process.env.KEEP_CONSOLE_LOGS === 'true' || 
                       !!process.env.DEBUG;
     
     console.log(`🔧 Debug mode: ${this.isDebugMode}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`   - KEEP_CONSOLE_LOGS: ${process.env.KEEP_CONSOLE_LOGS}`);
+    console.log(`   - DEBUG: ${process.env.DEBUG}`);
     
     this.configDir = path.join(
       os.homedir(),
@@ -66,9 +69,12 @@ class KarukuApp {
       this.handleInstallationProgress(progress);
     });
     
-    // DevToolsキーボードショートカットの無効化（本番ビルド時のみ）
+    // DevToolsキーボードショートカットの制御
     if (!this.isDebugMode) {
+      console.log('🚫 Production mode: DevTools shortcuts will be disabled');
       this.disableDevToolsShortcuts();
+    } else {
+      console.log('🔧 Debug mode: DevTools shortcuts are enabled');
     }
   }
 
