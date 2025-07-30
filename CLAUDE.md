@@ -313,7 +313,7 @@ electronAPI.installPngquant(): Promise<InstallationResult>
 ```json
 {
   \"build\": {
-    \"appId\": \"com.kato.karuku\",
+    \"appId\": \"com.katoken03.karuku\",
     \"productName\": \"Karuku\",
     \"directories\": { \"output\": \"dist-electron\" },
     \"files\": [\"dist/**/*\", \"assets/**/*\", \"node_modules/**/*\"],

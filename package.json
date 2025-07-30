@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Image Optimizer - PNG optimization menu bar app",
   "main": "dist/main/main.js",
-  "author": "Kato",
+  "author": "katoken03",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kato/karuku.git"
+    "url": "https://github.com/katoken03/karuku.git"
   },
   "scripts": {
     "dev": "concurrently \"webpack --mode development --watch\" \"wait-on dist/main/main.js && npx electron .\"",
@@ -31,7 +31,7 @@
     "test:devtools:enabled": "NODE_ENV=production KEEP_CONSOLE_LOGS=true npm run build && npx electron ."
   },
   "build": {
-    "appId": "com.kato.karuku",
+    "appId": "com.katoken03.karuku",
     "productName": "Karuku",
     "directories": {
       "output": "dist-electron"
